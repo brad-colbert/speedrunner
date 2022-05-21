@@ -9,23 +9,38 @@
 #include <unistd.h>
 #include <string.h>
 
+#define COLOR_CLOCK_BUFF 4
+
 #pragma bss-name (push,"PLAYFIELD")
 byte playfield[PF_PAGE_ROWS * PF_ROW_TILES][PF_PAGE_COLS * PF_COL_TILES];
 #pragma bss-name (pop)
 
+// A description about the "playfield":
+// There are PF_PAGE_ROWS x PF_PAGE_COLS pages in the playfield.
+// Each page consists of PF_ROW_TILES x PF_COL_TILES tiles.
+// Each tile is PF_ROW_PIX x PF_COL_PIX in pixels.
+// A line is a pixel in row space, and a col (maybe horrible name) is a pixel in col space.
+
 void init_playfield()
 {
-    unsigned short page_row = 0, page_col, row;
+    u_short page_row = 0, page_col, row;
 
     // Initialize memory
     for(page_row = 0; page_row < PF_PAGE_ROWS; ++page_row)
     {
         for(page_col = 0; page_col < PF_PAGE_COLS; ++page_col)
         {
-            for(row = 0; row < PF_ROW_TILES; ++row)
-            {
-                memset((void*)&playfield[page_row * PF_ROW_TILES + row][page_col * PF_COL_TILES], (int)'a' + page_row * PF_PAGE_COLS + page_col, (size_t)PF_COL_TILES);
+            for(row = 0; row < PF_ROW_TILES-1; ++row) {
+                memset((void*)&playfield[page_row * PF_ROW_TILES + row][page_col * PF_COL_TILES],
+                       (int)'a' + page_row * PF_PAGE_COLS + page_col,
+                       (size_t)PF_COL_TILES);
+
+                playfield[page_row * PF_ROW_TILES + row][page_col * PF_COL_TILES + (PF_COL_TILES-1)] = (byte)'|';        
             }
+
+            memset((void*)&playfield[page_row * PF_ROW_TILES + row][page_col * PF_COL_TILES],
+                    (int)'?',
+                    (size_t)PF_COL_TILES-1);
         }
     }    
 }
@@ -39,21 +54,20 @@ void scroll_playfield(u_short line, u_short col)
     u_short p_row;
     u_short p_col;
 
-    // Bounds check
-    if (line >= PF_LINES)
-        return;
-
-    if (col >= PF_COLS)
-        return;
-
+    // Maybe perform some bounds check in here?
+    
     p_row = line / PF_ROW_PIX;
     p_col = col  / PF_COL_PIX;
 
     // Check if we need to perform a course scroll
-    if(*((short*)&DL[4]) != (unsigned short)&playfield[p_row][p_col])
+    if(*((u_short*)&DL[4]) != (u_short)&playfield[p_row][p_col]) {
         // Course scroll
         for(dl_row = 0; dl_row < PF_ROW_TILES; ++dl_row)
-            *((short*)&DL[(dl_row * 3 + 1) + 3]) = (unsigned short)&playfield[p_row + dl_row][p_col];
+            *((u_short*)&DL[(dl_row * 3 + 1) + 3]) = (u_short)&playfield[p_row + dl_row][p_col];
+
+        // Last line is the buffer line
+        *((u_short*)&DL[(dl_row * 3 + 1) + 3]) = (u_short)&playfield[p_row + dl_row][p_col];
+    }
 
     // Fine scroll
     ANTIC.vscrol = line % PF_ROW_PIX;

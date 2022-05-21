@@ -122,12 +122,14 @@ void DISPLAY_LIST_GFX7 =
     DL_JVB, &DISPLAY_LIST_GFX7      // 33 bytes
 };
 #else
+#define ENABLE_HSCROL
 void DISPLAY_LIST_ANTIC4 =
 {
     DL_BLK8,
     DL_BLK8,
     DL_BLK8,
-//DL_HSCROL(
+
+    #ifdef ENABLE_HSCROL
     DL_LMS(DL_VSCROL(DL_HSCROL(DL_CHR40x8x4))),  &playfield[0][0]+ 0x0000, // ANTIC 4
     DL_LMS(DL_VSCROL(DL_HSCROL(DL_CHR40x8x4))),  &playfield[0][0]+ 0x00A0,
     DL_LMS(DL_VSCROL(DL_HSCROL(DL_CHR40x8x4))),  &playfield[0][0]+ 0x0140,
@@ -155,6 +157,37 @@ void DISPLAY_LIST_ANTIC4 =
     DL_LMS(DL_VSCROL(DL_HSCROL(DL_CHR40x8x4))),  &playfield[0][0]+ 0x0DC0,
     DL_LMS(DL_VSCROL(DL_HSCROL(DL_CHR40x8x4))),  &playfield[0][0]+ 0x0E60, // Ln 24,  75 bytes
 
+    DL_LMS(DL_HSCROL(DL_CHR40x8x4)),  &playfield[0][0]+ 0x0F00, // Buffer Ln 25,  75 bytes
+    #else
+    DL_LMS(DL_VSCROL(DL_CHR40x8x4)),  &playfield[0][0]+ 0x0000, // ANTIC 4
+    DL_LMS(DL_VSCROL(DL_CHR40x8x4)),  &playfield[0][0]+ 0x00A0,
+    DL_LMS(DL_VSCROL(DL_CHR40x8x4)),  &playfield[0][0]+ 0x0140,
+    DL_LMS(DL_VSCROL(DL_CHR40x8x4)),  &playfield[0][0]+ 0x01E0,
+    DL_LMS(DL_VSCROL(DL_CHR40x8x4)),  &playfield[0][0]+ 0x0280,
+    DL_LMS(DL_VSCROL(DL_CHR40x8x4)),  &playfield[0][0]+ 0x0320,
+    DL_LMS(DL_VSCROL(DL_CHR40x8x4)),  &playfield[0][0]+ 0x03C0,
+    DL_LMS(DL_VSCROL(DL_CHR40x8x4)),  &playfield[0][0]+ 0x0460,
+    DL_LMS(DL_VSCROL(DL_CHR40x8x4)),  &playfield[0][0]+ 0x0500,
+    DL_LMS(DL_VSCROL(DL_CHR40x8x4)),  &playfield[0][0]+ 0x05A0, // Ln 10,  33 bytes
+
+    DL_LMS(DL_VSCROL(DL_CHR40x8x4)),  &playfield[0][0]+ 0x0640,
+    DL_LMS(DL_VSCROL(DL_CHR40x8x4)),  &playfield[0][0]+ 0x06E0,
+    DL_LMS(DL_VSCROL(DL_CHR40x8x4)),  &playfield[0][0]+ 0x0780,
+    DL_LMS(DL_VSCROL(DL_CHR40x8x4)),  &playfield[0][0]+ 0x0820,
+    DL_LMS(DL_VSCROL(DL_CHR40x8x4)),  &playfield[0][0]+ 0x08C0,
+    DL_LMS(DL_VSCROL(DL_CHR40x8x4)),  &playfield[0][0]+ 0x0960,
+    DL_LMS(DL_VSCROL(DL_CHR40x8x4)),  &playfield[0][0]+ 0x0A00,
+    DL_LMS(DL_VSCROL(DL_CHR40x8x4)),  &playfield[0][0]+ 0x0AA0,
+    DL_LMS(DL_VSCROL(DL_CHR40x8x4)),  &playfield[0][0]+ 0x0B40,
+    DL_LMS(DL_VSCROL(DL_CHR40x8x4)),  &playfield[0][0]+ 0x0BE0, // Ln 20,  63 bytes
+
+    DL_LMS(DL_VSCROL(DL_CHR40x8x4)),  &playfield[0][0]+ 0x0C80,
+    DL_LMS(DL_VSCROL(DL_CHR40x8x4)),  &playfield[0][0]+ 0x0D20,
+    DL_LMS(DL_VSCROL(DL_CHR40x8x4)),  &playfield[0][0]+ 0x0DC0,
+    DL_LMS(DL_VSCROL(DL_CHR40x8x4)),  &playfield[0][0]+ 0x0E60, // Ln 24,  75 bytes
+
+    DL_LMS(DL_CHR40x8x4),  &playfield[0][0]+ 0x0F00, // Buffer Ln 25,  75 bytes
+    #endif
     DL_JVB, &DISPLAY_LIST_ANTIC4      // 78 bytes
 };
 #endif
