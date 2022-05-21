@@ -5,8 +5,6 @@
 
 // Atari specific includes next
 #include <atari.h>
-#include <conio.h>
-#include <peekpoke.h>
 
 // Standard C includes
 #include <stdio.h>
@@ -17,7 +15,7 @@
 
 int main()
 {
-    // cprintf("Hello World!\n\r");
+#if 0
     unsigned short page_row = 0, page_col, row;
     byte vscroll;
 
@@ -27,7 +25,7 @@ int main()
     // Don't quit
     while(1)
     {
-        for(page_row = 0; page_row < (PF_PAGE_ROWS-1) * 24; ++page_row)
+        for(page_row = 0; page_row < (PF_PAGE_ROWS-1) * PF_ROW_TILES; ++page_row)
         {
             for(vscroll = 0; vscroll < 8; ++vscroll)
             {
@@ -45,6 +43,46 @@ int main()
             }
         }
     }
+#else
+    short line, col;
+    short line_d, col_d;
+    byte bounce_count = 0;
+
+    init_graphics();
+    init_playfield();
+
+    line = col = 0;
+    line_d = col_d = 1;
+
+    while (bounce_count < 5) // Five bounces
+    {
+        scroll_playfield(line, col);
+
+        // Update line and col
+        line += line_d;
+        col  += col_d;
+
+        // Bounce
+        if(line >= PF_LINES) {
+            line_d = -1;
+            ++bounce_count;
+        }
+        else if(line <= 0) {
+            line_d = 1;
+            ++bounce_count;
+        }
+
+        if(col >= PF_COLS) {
+            col_d = -1;
+            ++bounce_count;
+        }
+        else if(col <= 0) {
+            col_d = 1;
+            ++bounce_count;
+        }
+    }
+
+#endif
 
     close_graphics();
 

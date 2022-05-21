@@ -1,5 +1,9 @@
 #include "playfield.h"
+#include "graphics.h"
 #include "types.h"
+
+// Atari specific includes next
+#include <atari.h>
 
 // Standard C includes
 #include <unistd.h>
@@ -24,4 +28,29 @@ void init_playfield()
             }
         }
     }    
+}
+
+void scroll_playfield(u_short line, u_short col)
+{
+    // Working variables
+    byte dl_row;
+
+    // Course scroll indecies
+    u_short p_row = line / PF_ROW_PIX;
+    u_short p_col = col  / PF_COL_PIX;
+
+    // Bounds check
+    if (line >= PF_LINES)
+        return;
+
+    if (col >= PF_COLS)
+        return;
+
+    // Fine scroll
+    ANTIC.vscrol = line % PF_ROW_PIX;
+    ANTIC.hscrol = PF_COL_PIX - (col % PF_COL_PIX);
+
+    // Course scroll
+    for(dl_row = 0; dl_row < PF_ROW_TILES; ++dl_row)
+        *((short*)&DL[(dl_row * 3 + 1) + 3]) = (unsigned short)&playfield[p_row + dl_row][p_col];
 }
