@@ -54,8 +54,6 @@ int main()
         //sleep(1);
     }
 
-#endif
-
     close_graphics();
 
     return 0;
