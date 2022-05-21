@@ -15,35 +15,6 @@
 
 int main()
 {
-#if 0
-    unsigned short page_row = 0, page_col, row;
-    byte vscroll;
-
-    init_graphics();
-    init_playfield();
-
-    // Don't quit
-    while(1)
-    {
-        for(page_row = 0; page_row < (PF_PAGE_ROWS-1) * PF_ROW_TILES; ++page_row)
-        {
-            for(vscroll = 0; vscroll < 8; ++vscroll)
-            {
-                ANTIC.vscrol = vscroll;
-                ANTIC.hscrol = 4-(vscroll%4);
-                sleep(1);
-            }
-
-            page_col = page_row;
-            for(row = 0; row < 24; ++row)
-            {
-                //byte* memloc = &playfield[page_row + row][page_col];
-
-                *((short*)&DL[(row * 3 + 1) + 3]) = (unsigned short)&playfield[page_row + row][page_col];//(unsigned short)memloc;
-            }
-        }
-    }
-#else
     short line, col;
     short line_d, col_d;
     byte bounce_count = 0;
@@ -54,7 +25,7 @@ int main()
     line = col = 0;
     line_d = col_d = 1;
 
-    while (bounce_count < 5) // Five bounces
+    while (bounce_count < 100) // One hundred bounces
     {
         scroll_playfield(line, col);
 
@@ -80,6 +51,7 @@ int main()
             col_d = 1;
             ++bounce_count;
         }
+        //sleep(1);
     }
 
 #endif

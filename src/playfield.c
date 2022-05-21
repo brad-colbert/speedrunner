@@ -36,8 +36,8 @@ void scroll_playfield(u_short line, u_short col)
     byte dl_row;
 
     // Course scroll indecies
-    u_short p_row = line / PF_ROW_PIX;
-    u_short p_col = col  / PF_COL_PIX;
+    u_short p_row;
+    u_short p_col;
 
     // Bounds check
     if (line >= PF_LINES)
@@ -46,11 +46,16 @@ void scroll_playfield(u_short line, u_short col)
     if (col >= PF_COLS)
         return;
 
+    p_row = line / PF_ROW_PIX;
+    p_col = col  / PF_COL_PIX;
+
+    // Check if we need to perform a course scroll
+    if(*((short*)&DL[4]) != (unsigned short)&playfield[p_row][p_col])
+        // Course scroll
+        for(dl_row = 0; dl_row < PF_ROW_TILES; ++dl_row)
+            *((short*)&DL[(dl_row * 3 + 1) + 3]) = (unsigned short)&playfield[p_row + dl_row][p_col];
+
     // Fine scroll
     ANTIC.vscrol = line % PF_ROW_PIX;
     ANTIC.hscrol = PF_COL_PIX - (col % PF_COL_PIX);
-
-    // Course scroll
-    for(dl_row = 0; dl_row < PF_ROW_TILES; ++dl_row)
-        *((short*)&DL[(dl_row * 3 + 1) + 3]) = (unsigned short)&playfield[p_row + dl_row][p_col];
 }
