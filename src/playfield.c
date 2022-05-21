@@ -1,0 +1,27 @@
+#include "playfield.h"
+#include "types.h"
+
+// Standard C includes
+#include <unistd.h>
+#include <string.h>
+
+#pragma bss-name (push,"PLAYFIELD")
+byte playfield[PF_PAGE_ROWS * PF_ROW_TILES][PF_PAGE_COLS * PF_COL_TILES];
+#pragma bss-name (pop)
+
+void init_playfield()
+{
+    unsigned short page_row = 0, page_col, row;
+
+    // Initialize memory
+    for(page_row = 0; page_row < PF_PAGE_ROWS; ++page_row)
+    {
+        for(page_col = 0; page_col < PF_PAGE_COLS; ++page_col)
+        {
+            for(row = 0; row < PF_ROW_TILES; ++row)
+            {
+                memset((void*)&playfield[page_row * PF_ROW_TILES + row][page_col * PF_COL_TILES], (int)'a' + page_row * PF_PAGE_COLS + page_col, (size_t)PF_COL_TILES);
+            }
+        }
+    }    
+}
