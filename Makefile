@@ -9,7 +9,7 @@
  
 # Space or comma separated list of cc65 supported target platforms to build for.
 # Default: c64 (lowercase!)
-TARGETS := atarixl
+TARGETS := atari
  
 # Name of the final, single-file executable.
 # Default: name of the current dir with target name appended
@@ -38,7 +38,7 @@ ASFLAGS =
 # Additional linker flags and options.
 # Default: none
 LDFLAGS = $(LDFLAGS.$(TARGETS))
-LDFLAGS.atarixl = --mapfile $(PROGRAM).map
+LDFLAGS.$(TARGETS) = --mapfile $(PROGRAM).map
  
 # Path to the directory containing C and ASM sources.
 # Default: src
@@ -123,7 +123,7 @@ endef
 # Presume the C64 target like the cl65 compile & link utility does.
 # Set TARGETS to override.
 ifeq ($(TARGETS),)
-  TARGETS := atarixl
+  TARGETS := atari
 endif
  
 # Presume we're in a project directory so name the program like the current
@@ -316,7 +316,7 @@ $(TARGETOBJDIR)/%.o: %.a65 | $(TARGETOBJDIR)
 	$(CC) -t $(CC65TARGET) -c --create-dep $(@:.o=.d) $(ASFLAGS) -o $@ $<
  
 $(PROGRAM): $(CONFIG) $(OBJECTS) $(LIBS)
-	$(CC) -t $(CC65TARGET) $(LDFLAGS) -o $@ $(patsubst %.cfg,-C %.cfg,$^)
+	$(CC) -t $(CC65TARGET) $(LDFLAGS) -Ln sr.lbl -o $@ $(patsubst %.cfg,-C %.cfg,$^)
 
  
 test: $(PROGRAM)
