@@ -1,7 +1,7 @@
 ;; Playfield utils
 
 .export _spf
-.export _initVBI
+.export _setup_vbi
 	
 ;; An interupt routine for the VBI
 ;;.interruptor _spf
@@ -13,19 +13,29 @@ _spf:
 	jmp XITVBV
 
 SETVBV = $E45C
-_initVBI:
-    ;lda        $d301
-    ;pha
+_setup_vbi:
+    ; Disable OS RAM
+    lda        $d301
+    pha
 
-    ;ora        #1
-    ;sta        $d301
+    ora        #1
+    sta        $d301
 
+    ; Setup VBI
     ldy         #<_spf
     ldx         #>_spf
     lda         #7
     jsr         SETVBV
 
-    ;pla
-    ;sta        $d301
+    ; Enable OS RAM
+    pla
+    sta        $d301
 
+    rts
+
+WSYNC = $D40A
+_wait_wsync:
+    pha
+    sta WSYNC
+    pla
     rts

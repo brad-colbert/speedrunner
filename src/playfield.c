@@ -22,74 +22,11 @@ byte playfield[PF_PAGE_ROWS * PF_ROW_TILES][PF_PAGE_COLS * PF_COL_TILES];
 // Each tile is PF_ROW_PIX x PF_COL_PIX in pixels.
 // A line is a pixel in row space, and a col (maybe horrible name) is a pixel in col space.
 
-#if 0
-    __asm__("pha");
-    __asm__("tya");
-    __asm__("pha");
-    __asm__("txa");
-    __asm__("pha");
-    __asm__("sta %w", WSYNC);
-    POKE(PRIOR, ORG_GPRIOR | GFX_9);
-    POKEW(VDSLST, (unsigned)disable_9_dli);
-    __asm__("pla");
-    __asm__("tax");
-    __asm__("pla");
-    __asm__("tay");
-    __asm__("pla");
-    __asm__("rti");
-#endif
-
-// Enable Gfx 9
-#define WSYNC 0xD40A
-
-/*
-#pragma optimize(push, off)
-void wait_for_sync(void) {
-    __asm__("pha");
-    __asm__("tya");
-    __asm__("pha");
-    __asm__("txa");
-    __asm__("pha");
-    __asm__("sta %w", WSYNC);    
-    __asm__("pla");
-    __asm__("tax");
-    __asm__("pla");
-    __asm__("tay");
-    __asm__("pla");
-    __asm__("rti");
-}
-#pragma optimize(pop)
-*/
-
-#if 1
-void setup_vbi()
-{
-    #define SETVBV 0xE45C
-    #pragma optimize(push, off)
-    //__asm__("pha");
-    //__asm__("tya");
-    //__asm__("pha");
-    //__asm__("txa");
-    //__asm__("pha");
-    __asm__("lda #7");    
-    __asm__("ldx #>_spf");    
-    __asm__("ldy #<_spf");    
-    __asm__("jsr #$E45C"); //%w", SETVBV);   
-    //__asm__("rts");   
-    //__asm__("pla");
-    //__asm__("tax");
-    //__asm__("pla");
-    //__asm__("tay");
-    //__asm__("pla");
-    #pragma optimize(pop)
-}
-#endif
-
 void init_playfield()
 {
     u_short page_row = 0, page_col, row;
 
-    //setup_vbi();
+    setup_vbi();
 
     // Initialize memory
     for(page_row = 0; page_row < PF_PAGE_ROWS; ++page_row)
@@ -109,8 +46,6 @@ void init_playfield()
                     (size_t)PF_COL_TILES-1);
         }
     }
-
-    //init_vbi();
 }
 
 void scroll_playfield(u_short line, u_short col)
@@ -121,16 +56,6 @@ void scroll_playfield(u_short line, u_short col)
     // Course scroll indecies
     u_short p_row;
     u_short p_col;
-
-    #if 0
-    #pragma optimize(push, off)
-    __asm__("pha");
-    __asm__("sta %w", WSYNC);
-    __asm__("pla");
-    #pragma optimize(pop)
-    #elif 0
-    scroll_playfield_fast();
-    #endif
 
     // Maybe perform some bounds check in here?
     
