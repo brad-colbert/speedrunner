@@ -27,4 +27,6 @@ void init_playfield(void);
 
 void scroll_playfield(u_short line, u_short col);
 
+void setup_vbi(void);
+
 #endif // __PLAYFIELD_H__
