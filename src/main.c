@@ -2,6 +2,7 @@
 #include "graphics.h"
 #include "playfield.h"
 #include "types.h"
+#include "playfield_utils.h"
 
 // Atari specific includes next
 #include <atari.h>
@@ -17,6 +18,11 @@
 
 int main()
 {
+    initVBI();
+
+    while(1);
+
+    #if 0
     // cprintf("Hello World!\n\r");
     unsigned short page_row = 0, page_col, row;
     byte vscroll;
@@ -47,6 +53,7 @@ int main()
     }
 
     close_graphics();
+    #endif
 
     return 0;
 }
