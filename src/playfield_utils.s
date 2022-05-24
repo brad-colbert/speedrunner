@@ -9,12 +9,23 @@ XITVBV = $E462
 SYSVBV = $E45F
 _spf:
 	lda #$FF
-	sta $3300
+	sta $2700
 	jmp XITVBV
 
 SETVBV = $E45C
-_initVBI: ldy         #<_spf
- 		  ldx         #>_spf
-          lda         #7
-          jsr         SETVBV
-          rts
+_initVBI:
+    ;lda        $d301
+    ;pha
+
+    ;ora        #1
+    ;sta        $d301
+
+    ldy         #<_spf
+    ldx         #>_spf
+    lda         #7
+    jsr         SETVBV
+
+    ;pla
+    ;sta        $d301
+
+    rts

@@ -6,54 +6,111 @@
 
 // Atari specific includes next
 #include <atari.h>
+#include <joystick.h>
 #include <conio.h>
-#include <peekpoke.h>
 
 // Standard C includes
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
 
-#define offset(pr, pc, r, c) (pr * PAGE_COLS * 24 * 40  +  pc * 40  +  r * PAGE_COLS * 40  +  c)
+#define USE_JOYSTICK
 
 int main()
 {
-    initVBI();
-
-    while(1);
-
-    #if 0
-    // cprintf("Hello World!\n\r");
-    unsigned short page_row = 0, page_col, row;
-    byte vscroll;
+    short line, col;
+    short line_d, col_d;
+    byte bounce_count = 0;
+    #ifdef USE_JOYSTICK
+    int joy;
+    #endif
 
     init_graphics();
     init_playfield();
 
-    // Don't quit
-    while(1)
+    line = col = 0;
+    line_d = col_d = 1;
+
+    #ifdef USE_JOYSTICK
+
+    joy_install(joy_static_stddrv);
+
+    joy = joy_read(JOY_1);
+    while (!JOY_BTN_1(joy))
     {
-        for(page_row = 0; page_row < (PF_PAGE_ROWS-1) * 24; ++page_row)
+        if (JOY_UP(joy))
         {
-            for(vscroll = 0; vscroll < 8; ++vscroll)
-            {
-                ANTIC.vscrol = vscroll;
-                ANTIC.hscrol = 4-(vscroll%4);
-                sleep(1);
-            }
-
-            page_col = page_row;
-            for(row = 0; row < 24; ++row)
-            {
-                //byte* memloc = &playfield[page_row + row][page_col];
-
-                *((short*)&DL[(row * 3 + 1) + 3]) = (unsigned short)&playfield[page_row + row][page_col];//(unsigned short)memloc;
-            }
+            //cprintf("UP\n");
+            --line;
         }
+        else if (JOY_DOWN(joy))
+        {
+            //cprintf("DOWN\n");
+            ++line;
+        }
+        else if (JOY_LEFT(joy))
+        {
+            //cprintf("LEFT\n");
+            --col;            
+        }
+        else if (JOY_RIGHT(joy))
+        {
+            //cprintf("RIGHT\n");
+            ++col;          
+        }
+
+        // Clamp
+        if (line < 0)
+            line = 0;
+        else if (line >= (PF_LINES-PF_LINES_PAGE))
+            line = (PF_LINES-PF_LINES_PAGE);
+
+        if (col < 0)
+            col = 0;
+        else if (col >= (PF_COLS-PF_COLS_PAGE))
+            col = (PF_COLS-PF_COLS_PAGE);
+        
+        scroll_playfield(line, col);
+
+        joy = joy_read(JOY_1);
     }
 
-    close_graphics();
+    joy_uninstall();
+
+    #else
+
+    while (bounce_count < 100) // One hundred bounces
+    {
+        scroll_playfield(line, col);
+
+        // Update line and col
+        line += line_d;
+        col  += col_d;
+
+        // Bounce
+        if(line >= (PF_LINES-PF_LINES_PAGE)) {
+            line_d = -1;
+            ++bounce_count;
+        }
+        else if(line <= 0) {
+            line_d = 1;
+            ++bounce_count;
+        }
+
+        if(col >= (PF_COLS-PF_COLS_PAGE)) {
+            col_d = -1;
+            ++bounce_count;
+        }
+        else if(col <= 0) {
+            col_d = 1;
+            ++bounce_count;
+        }
+        //sleep(1);
+    }
+
     #endif
+
+    close_graphics();
 
     return 0;
 }
