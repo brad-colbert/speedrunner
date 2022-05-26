@@ -46,6 +46,8 @@ void init_playfield()
                     (size_t)PF_COL_TILES-1);
         }
     }
+
+    playfield_init();
 }
 
 void scroll_playfield(u_short line, u_short col)
