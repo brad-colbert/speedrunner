@@ -16,20 +16,25 @@
 
 #define USE_JOYSTICK
 
+char line_d, col_d;
+
 int main()
 {
-    short line, col;
-    short line_d, col_d;
+    //short line, col;
+    //short line_d, col_d;
     byte bounce_count = 0;
     #ifdef USE_JOYSTICK
     int joy;
     #endif
 
+    cprintf("Hit Key");
+    cgetc();  // Pause
+
     init_graphics();
     init_playfield();
 
-    line = col = 0;
-    line_d = col_d = 1;
+    //line = col = 0;
+    line_d = col_d = 0;
 
     #ifdef USE_JOYSTICK
 
@@ -41,24 +46,29 @@ int main()
         if (JOY_UP(joy))
         {
             //cprintf("UP\n");
-            --line;
+            //--line;
+            line_d = -1;
         }
         else if (JOY_DOWN(joy))
         {
             //cprintf("DOWN\n");
-            ++line;
+            //++line;
+            line_d = 1;
         }
         else if (JOY_LEFT(joy))
         {
             //cprintf("LEFT\n");
-            --col;            
+            //--col;
+            col_d = -1;
         }
         else if (JOY_RIGHT(joy))
         {
             //cprintf("RIGHT\n");
-            ++col;          
+            //++col;
+            col_d = 1;
         }
 
+        /*
         // Clamp
         if (line < 0)
             line = 0;
@@ -71,6 +81,7 @@ int main()
             col = (PF_COLS-PF_COLS_PAGE);
         
         scroll_playfield(line, col);
+        */
 
         joy = joy_read(JOY_1);
     }

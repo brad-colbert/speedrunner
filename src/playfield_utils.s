@@ -20,15 +20,18 @@ horz_scroll_max = 4     ; ANTIC mode 4 has 4 color clocks
 vscroll_x2 = $a4        ; twice vertical scrolling? no = 0, yes = $ff
 
 _playfield_init:
-    HSCROL   = $d404
-    VSCROL   = $d405
-    lda #0          ; initialize horizontal scrolling value
-    sta horz_scroll
-    sta HSCROL      ; initialize hardware register
+        HSCROL   = $d404
+        VSCROL   = $d405
+        lda #0          ; initialize horizontal scrolling value
+        sta horz_scroll
+        sta HSCROL      ; initialize hardware register
 
-    lda #0          ; initialize vertical scrolling value
-    sta vert_scroll
-    sta VSCROL      ; initialize hardware register
+        lda #0          ; initialize vertical scrolling value
+        sta vert_scroll
+        sta VSCROL      ; initialize hardware register
+
+        lda #delay      ; number of VBLANKs to wait
+        sta delay_count
 
 ; scroll one color clock right and check if at HSCROL limit, returns
 ; HSCROL value in A
@@ -144,15 +147,61 @@ _coarse_scroll_down:
 XITVBV = $E462
 SYSVBV = $E45F
 _spf:
-    .import _DISPLAY_LIST_ANTIC4
-	;lda #$FF
-	;sta _DISPLAY_LIST_ANTIC4
+        ;.import _DISPLAY_LIST_ANTIC4
+        ;lda #$FF
+        ;sta _DISPLAY_LIST_ANTIC4
+        .import _col_d, _line_d
 
-	jmp XITVBV
+        ; Perform slower updates
+        dec delay_count ; wait for number of VBLANKs before updating
+        bne @exit       ;   fine/coarse scrolling
+
+        ; Check if horizontal
+        lda _col_d            ; NUM1
+        cmp #0                ; NUM2
+        beq @vertical         ; No change
+        bmi @left             ; NUM2 > NUM1
+        bcs @right            ; NUM2 < NUM1
+        jmp @vertical         ; done
+
+@left:  jsr _fine_scroll_left
+        jmp @doneh
+@right: jsr _fine_scroll_right
+
+@doneh: lda #0                 
+        sta _col_d            ; set as handled
+
+        ; Check if vertical
+@vertical: lda _line_d        ; NUM1
+        cmp #0                ; NUM2
+        beq @donev            ; No change
+        bmi @up               ; NUM2 > NUM1
+        bcs @down             ; NUM2 < NUM1
+        jmp @donev            ; done
+
+@up:    jsr _fine_scroll_up
+        jmp @donev
+@down:  jsr _fine_scroll_down
+
+@donev: lda #0                 
+        sta _line_d           ; set as handled
+
+        lda #delay            ; reset counter
+        sta delay_count
+        
+@exit:  jmp XITVBV
+
+.IFDEF TEST
+_iter_test:
+        .import _counter
+        inc _counter
+@exit:  jmp XITVBV     
+.ENDIF
 
 SETVBV = $E45C
 PORTB  = $d301
 _setup_vbi:
+    .IFDEF ATARIXL
     ;.import _enable_os_ram
     ;.import _disable_os_ram
     ; Disable OS RAM
@@ -161,6 +210,7 @@ _setup_vbi:
 
     ora        #1
     sta        PORTB
+    .ENDIF
 
     ;jsr _disable_os_ram
 
@@ -170,11 +220,13 @@ _setup_vbi:
     lda         #7
     jsr         SETVBV
 
+    .IFDEF ATARIXL
     ; Enable OS RAM
     pla
     sta        PORTB
 
     ;jsr _enable_os_ram
+    .ENDIF
 
     rts
 

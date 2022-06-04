@@ -4,7 +4,7 @@ CA65=$(CC65_HOME)\\ca65.exe
 CL65=$(CC65_HOME)\\cl65.exe
 
 PRODUCT=sr
-TARGET=atarixl
+TARGET=atari
 SRC_DIR=src
 
 .SUFFIXES:
