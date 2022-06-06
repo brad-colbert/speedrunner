@@ -5,6 +5,7 @@
 
 // Atari specific includes next
 #include <atari.h>
+#include <conio.h>
 
 // Standard C includes
 #include <unistd.h>
@@ -13,7 +14,7 @@
 #define COLOR_CLOCK_BUFF 4
 
 #pragma bss-name (push,"PLAYFIELD")
-byte playfield[PF_PAGE_ROWS * PF_ROW_TILES][PF_PAGE_COLS * PF_COL_TILES];
+byte playfield[PF_ROW_BYTES][PF_COL_BYTES];
 #pragma bss-name (pop)
 
 // A description about the "playfield":
@@ -21,6 +22,17 @@ byte playfield[PF_PAGE_ROWS * PF_ROW_TILES][PF_PAGE_COLS * PF_COL_TILES];
 // Each page consists of PF_ROW_TILES x PF_COL_TILES tiles.
 // Each tile is PF_ROW_PIX x PF_COL_PIX in pixels.
 // A line is a pixel in row space, and a col (maybe horrible name) is a pixel in col space.
+
+#pragma data-name(push,"ZEROPAGE")
+byte scroll_flag = 0x00; // goes into ZEROPAGE
+byte h_fs = 0x00;        // horizontal fine scroll
+byte v_fs = 0x00;        // vertical fine scroll
+//byte h_cs = 0x00;        // horizontal course scroll
+//byte v_cs = 0x00;        // vertical course scroll
+#pragma data-name(pop)
+u_short line_r, col_r;
+byte* ul_addr = &playfield[0][0];
+byte* ul_addr_tmp;
 
 void init_playfield()
 {
@@ -46,38 +58,36 @@ void init_playfield()
                     (size_t)PF_COL_TILES-1);
         }
     }
-
-    playfield_init();
 }
 
 void scroll_playfield(u_short line, u_short col)
 {
-    // Working variables
-    byte dl_row;
+    // Local temporaries.  Values get copied when we have a lock on the memory accessed by the VBI.
+    byte h_cs, v_cs, h_fs_lcl, v_fs_lcl;
+    byte* ul_addr_lcl;
 
-    // Course scroll indecies
-    u_short p_row;
-    u_short p_col;
+    // Put some bounds on the coordinates
+    if(line >= (PF_LINES - PF_LINES_PER_PAGE))
+        line = PF_LINES - PF_LINES_PER_PAGE;
 
-    // Maybe perform some bounds check in here?
+    if(col >= (PF_COLS - PF_COLS_PER_PAGE))
+        col = PF_COLS - PF_COLS_PER_PAGE;
+
+    v_cs = (byte)(line / (u_short)PF_ROW_PIX);
+    h_cs = (byte)(col  / (u_short)PF_COL_PIX);
+
+    v_fs_lcl = (byte)(line % (u_short)PF_ROW_PIX); 
+    h_fs_lcl = PF_COL_PIX - (byte)(col %  (u_short)PF_COL_PIX);
+
+    ul_addr_lcl = &playfield[v_cs][h_cs];
+
+    // Keep the VBI from reading while we update the values.
+    scroll_flag = 0xFF;
+
+    v_fs = v_fs_lcl; 
+    h_fs = h_fs_lcl;
+
+    ul_addr = ul_addr_lcl;
     
-    p_row = line / PF_ROW_PIX;
-    p_col = col  / PF_COL_PIX;
-
-    // Check if we need to perform a course scroll
-    if(*((u_short*)&DL[4]) != (u_short)&playfield[p_row][p_col]) {
-        // Course scroll
-        for(dl_row = 0; dl_row < PF_ROW_TILES; ++dl_row)
-            *((u_short*)&DL[(dl_row * 3 + 1) + 3]) = (u_short)&playfield[p_row + dl_row][p_col];
-
-        // Last line is the buffer line
-        *((u_short*)&DL[(dl_row * 3 + 1) + 3]) = (u_short)&playfield[p_row + dl_row][p_col];
-    }
-
-    // Fine scroll
-    ANTIC.vscrol = line % PF_ROW_PIX;
-    ANTIC.hscrol = PF_COL_PIX - (col % PF_COL_PIX);
-
-    //
-    //wait_for_sync();
+    scroll_flag = 0x00;  // allow screen to update
 }

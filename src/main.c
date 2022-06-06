@@ -16,16 +16,18 @@
 
 #define USE_JOYSTICK
 
-char line_d, col_d;
+extern u_short line_r, col_r;
 
 int main()
 {
-    //short line, col;
-    //short line_d, col_d;
-    byte bounce_count = 0;
     #ifdef USE_JOYSTICK
     int joy;
+    #else
+    u_short delay;
+    u_short line_d, col_d;
+    byte bounce_count = 0;
     #endif
+    short line, col;
 
     cprintf("Hit Key");
     cgetc();  // Pause
@@ -33,8 +35,10 @@ int main()
     init_graphics();
     init_playfield();
 
-    //line = col = 0;
+    #ifndef USE_JOYSTICK
     line_d = col_d = 0;
+    #endif
+    line = col = 0;
 
     #ifdef USE_JOYSTICK
 
@@ -46,42 +50,36 @@ int main()
         if (JOY_UP(joy))
         {
             //cprintf("UP\n");
-            //--line;
-            line_d = -1;
+            --line;
         }
         else if (JOY_DOWN(joy))
         {
             //cprintf("DOWN\n");
-            //++line;
-            line_d = 1;
+            ++line;
         }
         else if (JOY_LEFT(joy))
         {
             //cprintf("LEFT\n");
-            //--col;
-            col_d = -1;
+            --col;
         }
         else if (JOY_RIGHT(joy))
         {
             //cprintf("RIGHT\n");
-            //++col;
-            col_d = 1;
+            ++col;
         }
 
-        /*
-        // Clamp
-        if (line < 0)
+        // Put some bounds on the coordinates
+        if(line >= (PF_LINES - PF_LINES_PER_PAGE))
+            line = PF_LINES - PF_LINES_PER_PAGE;
+        if(line < 0)
             line = 0;
-        else if (line >= (PF_LINES-PF_LINES_PAGE))
-            line = (PF_LINES-PF_LINES_PAGE);
 
-        if (col < 0)
+        if(col >= (PF_COLS - PF_COLS_PER_PAGE))
+            col = PF_COLS - PF_COLS_PER_PAGE;
+        if(col < 0)
             col = 0;
-        else if (col >= (PF_COLS-PF_COLS_PAGE))
-            col = (PF_COLS-PF_COLS_PAGE);
         
-        scroll_playfield(line, col);
-        */
+        scroll_playfield((u_short)line, (u_short)col);
 
         joy = joy_read(JOY_1);
     }
@@ -93,13 +91,15 @@ int main()
     while (bounce_count < 100) // One hundred bounces
     {
         scroll_playfield(line, col);
+        //cprintf("%d %d ", line, col);
+        //cprintf("%d %d\n\r", line_d, col_d);
 
         // Update line and col
         line += line_d;
         col  += col_d;
 
         // Bounce
-        if(line >= (PF_LINES-PF_LINES_PAGE)) {
+        if(line == (PF_LINES - PF_LINES_PER_PAGE)-1) {
             line_d = -1;
             ++bounce_count;
         }
@@ -108,7 +108,7 @@ int main()
             ++bounce_count;
         }
 
-        if(col >= (PF_COLS-PF_COLS_PAGE)) {
+        if(col == (PF_COLS - PF_COLS_PER_PAGE)-1) {
             col_d = -1;
             ++bounce_count;
         }
@@ -116,12 +116,16 @@ int main()
             col_d = 1;
             ++bounce_count;
         }
+        for(delay = 0; delay < 255; ++delay);
         //sleep(1);
     }
 
     #endif
 
     close_graphics();
+
+    cprintf("Hit Key To Close");
+    cgetc();  // Pause
 
     return 0;
 }
