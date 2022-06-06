@@ -15,6 +15,7 @@
 #include <string.h>
 
 #define USE_JOYSTICK
+#define DELAY 128
 
 extern u_short line_r, col_r;
 
@@ -23,10 +24,10 @@ int main()
     #ifdef USE_JOYSTICK
     int joy;
     #else
-    u_short delay;
     u_short line_d, col_d;
     byte bounce_count = 0;
     #endif
+    u_short delay;
     short line, col;
 
     cprintf("Hit Key");
@@ -48,25 +49,14 @@ int main()
     while (!JOY_BTN_1(joy))
     {
         if (JOY_UP(joy))
-        {
-            //cprintf("UP\n");
             --line;
-        }
         else if (JOY_DOWN(joy))
-        {
-            //cprintf("DOWN\n");
             ++line;
-        }
-        else if (JOY_LEFT(joy))
-        {
-            //cprintf("LEFT\n");
+
+        if (JOY_LEFT(joy))
             --col;
-        }
         else if (JOY_RIGHT(joy))
-        {
-            //cprintf("RIGHT\n");
             ++col;
-        }
 
         // Put some bounds on the coordinates
         if(line >= (PF_LINES - PF_LINES_PER_PAGE))
@@ -80,6 +70,8 @@ int main()
             col = 0;
         
         scroll_playfield((u_short)line, (u_short)col);
+
+        for(delay = 0; delay < DELAY; ++delay);
 
         joy = joy_read(JOY_1);
     }
@@ -116,7 +108,7 @@ int main()
             col_d = 1;
             ++bounce_count;
         }
-        for(delay = 0; delay < 255; ++delay);
+        for(delay = 0; delay < DELAY; ++delay);
         //sleep(1);
     }
 
