@@ -24,15 +24,14 @@ byte playfield[PF_ROW_BYTES][PF_COL_BYTES];
 // A line is a pixel in row space, and a col (maybe horrible name) is a pixel in col space.
 
 #pragma data-name(push,"ZEROPAGE")
+byte* ul_addr_tmp = &playfield[0][0];
+byte* row_addr = 0x0000;
 byte scroll_flag = 0x00; // goes into ZEROPAGE
 byte h_fs = 0x00;        // horizontal fine scroll
 byte v_fs = 0x00;        // vertical fine scroll
-//byte h_cs = 0x00;        // horizontal course scroll
-//byte v_cs = 0x00;        // vertical course scroll
 #pragma data-name(pop)
 u_short line_r, col_r;
 byte* ul_addr = &playfield[0][0];
-byte* ul_addr_tmp;
 
 void init_playfield()
 {
@@ -64,7 +63,7 @@ void scroll_playfield(u_short line, u_short col)
 {
     // Local temporaries.  Values get copied when we have a lock on the memory accessed by the VBI.
     byte h_cs, v_cs, h_fs_lcl, v_fs_lcl;
-    byte* ul_addr_lcl;
+    //byte* ul_addr_lcl;
 
     // Put some bounds on the coordinates
     if(line >= (PF_LINES - PF_LINES_PER_PAGE))
@@ -79,7 +78,7 @@ void scroll_playfield(u_short line, u_short col)
     v_fs_lcl = (byte)(line % (u_short)PF_ROW_PIX); 
     h_fs_lcl = PF_COL_PIX - (byte)(col %  (u_short)PF_COL_PIX);
 
-    ul_addr_lcl = &playfield[v_cs][h_cs];
+    //ul_addr_lcl = &playfield[v_cs][h_cs];
 
     // Keep the VBI from reading while we update the values.
     scroll_flag = 0xFF;
@@ -87,7 +86,8 @@ void scroll_playfield(u_short line, u_short col)
     v_fs = v_fs_lcl; 
     h_fs = h_fs_lcl;
 
-    ul_addr = ul_addr_lcl;
+    ul_addr = &playfield[v_cs][h_cs];
+    row_addr = &playfield[v_cs][0];
     
     scroll_flag = 0x00;  // allow screen to update
 }

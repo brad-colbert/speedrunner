@@ -2,6 +2,7 @@
 
 .export _setup_vbi
 .export update_scroll
+.export test_cross_4k
 
 WSYNC = $D40A
 _wait_wsync:
@@ -17,8 +18,9 @@ VSCROL   = $d405
         .importzp _scroll_flag
         .importzp _h_fs         ; horizontal fine scroll
         .importzp _v_fs         ; vertical fine scroll
+        .importzp _ul_addr_tmp
+        .importzp _row_addr
         .import _ul_addr
-        .import _ul_addr_tmp
         .import _DISPLAY_LIST_ANTIC4
 
         ; check to see if the x, y are being written, skip if so
@@ -46,6 +48,25 @@ VSCROL   = $d405
 
         ; Perform course scroll
 @course_scroll:
+        ; test to see if this line crosses 4K
+        ;jsr test_cross_4k
+        lda #$0F
+        and _row_addr + 1 ; get the last four bits of the value
+        bne @cont_1       ; 0 near 4K boundary, need to test LSB
+        lda _row_addr
+        cmp #160
+        bcs @cont_1       ; LSB of address is = 160 bytes, good to go
+
+        ; skip line
+        clc
+        lda _ul_addr  ; low byte
+        adc #<160
+        sta _ul_addr
+        lda _ul_addr+1  ; high byte
+        adc #>160
+        sta _ul_addr+1  ; high byte
+
+@cont_1:
         ldx #4          ; 5th byte after start of display list is high byte of address
         clc
         lda _ul_addr  ; low byte
@@ -63,7 +84,36 @@ VSCROL   = $d405
         sta _ul_addr_tmp+1
 
         ldy #24         ; 24 lines to modify
-@loop:  clc
+@loop:  
+        ; test to see if this line crosses 4K
+        ; increment row_addr to next line
+        clc
+        lda _row_addr  ; low byte
+        adc #<160
+        sta _row_addr
+        lda _row_addr+1  ; high byte
+        adc #>160
+        sta _row_addr+1
+
+        ; test to see if this line crosses 4K
+        lda #$0F
+        and _row_addr + 1 ; get the last four bits of the value
+        bne @cont_2       ; 0 near 4K boundary, need to test LSB
+        lda _row_addr
+        cmp #160
+        bcs @cont_2       ; LSB of address is = 160 bytes, good to go
+
+        ; skip line
+        clc
+        lda _ul_addr_tmp  ; low byte
+        adc #<160
+        sta _ul_addr_tmp
+        lda _ul_addr_tmp+1  ; high byte
+        adc #>160
+        sta _ul_addr_tmp+1  ; high byte
+
+@cont_2:
+        clc
         lda _ul_addr_tmp  ; low byte
         adc #<160
         sta _DISPLAY_LIST_ANTIC4,x  ; low byte
@@ -113,3 +163,21 @@ _setup_vbi:
         .ENDIF
 
         rts
+
+.PROC test_cross_4k
+        .importzp _row_addr
+        pha
+        lda #$0F
+        and _row_addr + 1 ; get the last four bits of the value
+        bne @done         ; 0 near 4K boundary, need to test LSB
+        lda _row_addr
+        cmp #160
+        bcs @done         ; LSB of address is = 160 bytes, good to go
+
+        lda #$FF
+        ;sta _row_addr
+        ;sta _row_addr+1
+
+@done:  pla
+        rts
+.ENDPROC
