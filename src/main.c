@@ -28,7 +28,7 @@ int main()
     byte bounce_count = 0;
     #endif
     u_short delay;
-    short line, col;
+    u_short x, y;
 
     cprintf("Hit Key");
     cgetc();  // Pause
@@ -39,7 +39,7 @@ int main()
     #ifndef USE_JOYSTICK
     line_d = col_d = 0;
     #endif
-    line = col = 0;
+    y = x = 0;
 
     #ifdef USE_JOYSTICK
 
@@ -49,27 +49,26 @@ int main()
     while (!JOY_BTN_1(joy))
     {
         if (JOY_UP(joy))
-            --line;
+            --y;
         else if (JOY_DOWN(joy))
-            ++line;
+            ++y;
 
-        if (JOY_LEFT(joy))
-            --col;
-        else if (JOY_RIGHT(joy))
-            ++col;
+        if (JOY_LEFT(joy)) {
+            if(x > 0)
+                --x;
+        }
+        else if (JOY_RIGHT(joy)) {
+            if(x < (PF_COLS - PF_COLS_PER_PAGE)-1)
+                ++x;
+        }
 
         // Put some bounds on the coordinates
-        if(line >= (PF_LINES - PF_LINES_PER_PAGE))
-            line = PF_LINES - PF_LINES_PER_PAGE;
-        if(line < 0)
-            line = 0;
+        if(y >= (PF_LINES - PF_LINES_PER_PAGE))
+            y = PF_LINES - PF_LINES_PER_PAGE;
+        if(y < 0)
+            y = 0;
 
-        if(col >= (PF_COLS - PF_COLS_PER_PAGE))
-            col = PF_COLS - PF_COLS_PER_PAGE;
-        if(col < 0)
-            col = 0;
-        
-        scroll_playfield((u_short)line, (u_short)col);
+        scroll_playfield((u_short)x, (u_short)y);
 
         for(delay = 0; delay < DELAY; ++delay);
 
