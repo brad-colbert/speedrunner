@@ -11,12 +11,26 @@
 #define PF_ROW_TILES 24
 #define PF_COL_TILES 40
 
+#define PF_COURSE_ROWS (PF_ROW_TILES * PF_PAGE_ROWS)
+#define PF_COURSE_COLS (PF_COL_TILES * PF_PAGE_COLS)
+
 #define PF_ROW_PIX 8
 #define PF_COL_PIX 4
+
+#define PF_LINES (PF_ROW_PIX * PF_COURSE_ROWS)
+#define PF_COLS  (PF_COL_PIX * PF_COURSE_COLS)
+
+#define PF_LINES_PER_PAGE (PF_ROW_TILES * PF_ROW_PIX)
+#define PF_COLS_PER_PAGE (PF_COL_TILES * PF_COL_PIX)
 #endif
 
-extern byte playfield[PF_PAGE_ROWS * PF_ROW_TILES][PF_PAGE_COLS * PF_COL_TILES];
+#define NUM_ROWS_TO_SKIP (PF_COURSE_ROWS / (4096 / PF_COURSE_COLS))
+
+extern byte playfield[PF_COURSE_ROWS + NUM_ROWS_TO_SKIP][PF_COURSE_COLS];
 
 void init_playfield(void);
+
+extern u_short line_r, col_r;
+void scroll_playfield(u_short line, u_short col);
 
 #endif // __PLAYFIELD_H__

@@ -2,51 +2,119 @@
 #include "graphics.h"
 #include "playfield.h"
 #include "types.h"
+#include "playfield_utils.h"
 
 // Atari specific includes next
 #include <atari.h>
+#include <joystick.h>
 #include <conio.h>
-#include <peekpoke.h>
 
 // Standard C includes
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
 
-#define offset(pr, pc, r, c) (pr * PAGE_COLS * 24 * 40  +  pc * 40  +  r * PAGE_COLS * 40  +  c)
+#define USE_JOYSTICK
+#define DELAY 128
+
+extern u_short line_r, col_r;
 
 int main()
 {
-    // cprintf("Hello World!\n\r");
-    unsigned short page_row = 0, page_col, row;
-    byte vscroll;
+    #ifdef USE_JOYSTICK
+    int joy;
+    #else
+    u_short line_d, col_d;
+    byte bounce_count = 0;
+    #endif
+    u_short delay;
+    u_short x, y;
+
+    cprintf("Hit Key");
+    cgetc();  // Pause
 
     init_graphics();
     init_playfield();
 
-    // Don't quit
-    while(1)
+    #ifndef USE_JOYSTICK
+    line_d = col_d = 0;
+    #endif
+    y = x = 0;
+
+    #ifdef USE_JOYSTICK
+
+    joy_install(joy_static_stddrv);
+
+    joy = joy_read(JOY_1);
+    while (!JOY_BTN_1(joy))
     {
-        for(page_row = 0; page_row < (PF_PAGE_ROWS-1) * 24; ++page_row)
-        {
-            for(vscroll = 0; vscroll < 8; ++vscroll)
-            {
-                ANTIC.vscrol = vscroll;
-                ANTIC.hscrol = 4-(vscroll%4);
-                sleep(1);
-            }
-
-            page_col = page_row;
-            for(row = 0; row < 24; ++row)
-            {
-                //byte* memloc = &playfield[page_row + row][page_col];
-
-                *((short*)&DL[(row * 3 + 1) + 3]) = (unsigned short)&playfield[page_row + row][page_col];//(unsigned short)memloc;
-            }
+        if (JOY_UP(joy)){
+            if(y > 0)
+                --y;
         }
+        else if (JOY_DOWN(joy)){
+            if(y < (PF_LINES - PF_LINES_PER_PAGE)-1)
+                ++y;
+        }
+
+        if (JOY_LEFT(joy)) {
+            if(x > 0)
+                --x;
+        }
+        else if (JOY_RIGHT(joy)) {
+            if(x < (PF_COLS - PF_COLS_PER_PAGE)-1)
+                ++x;
+        }
+
+        scroll_playfield((u_short)x, (u_short)y);
+
+        for(delay = 0; delay < DELAY; ++delay);
+
+        joy = joy_read(JOY_1);
     }
 
+    joy_uninstall();
+
+    #else
+
+    while (bounce_count < 100) // One hundred bounces
+    {
+        scroll_playfield(line, col);
+        //cprintf("%d %d ", line, col);
+        //cprintf("%d %d\n\r", line_d, col_d);
+
+        // Update line and col
+        line += line_d;
+        col  += col_d;
+
+        // Bounce
+        if(line == (PF_LINES - PF_LINES_PER_PAGE)-1) {
+            line_d = -1;
+            ++bounce_count;
+        }
+        else if(line <= 0) {
+            line_d = 1;
+            ++bounce_count;
+        }
+
+        if(col == (PF_COLS - PF_COLS_PER_PAGE)-1) {
+            col_d = -1;
+            ++bounce_count;
+        }
+        else if(col <= 0) {
+            col_d = 1;
+            ++bounce_count;
+        }
+        for(delay = 0; delay < DELAY; ++delay);
+        //sleep(1);
+    }
+
+    #endif
+
     close_graphics();
+
+    cprintf("Hit Key To Close");
+    cgetc();  // Pause
 
     return 0;
 }
