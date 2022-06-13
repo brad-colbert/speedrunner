@@ -9,9 +9,9 @@ _wait_wsync:
     rts
 
 .segment	"DATA"
-_addr_result:
+_addr_temp:
 	.word	$0000
-_dl_offset:
+_dl_index:
         .byte   $04
 
 .segment "CODE"
@@ -57,25 +57,27 @@ VSCROL   = $d405
         clc
         lda _address_lut,x
         adc _col
-        sta _addr_result
+        sta _addr_temp
 
         inx
         lda _address_lut,x
         adc #$00
-        sta _addr_result+1       
+        sta _addr_temp+1       
 
         ; Compare the LUT address at the row + col (offset) with the first address in _DISPLAY_LIST_ANTIC4
         clc
-        lda _addr_result
+        lda _addr_temp
         cmp _DISPLAY_LIST_ANTIC4+4      ; LSB of 2nd number (4th byte is MSB of LSI address)
         bne @course_scroll              ; There is a difference so let's update the display list
-        lda _addr_result+1
+        lda _addr_temp+1
         cmp _DISPLAY_LIST_ANTIC4+5      ; MSB of 2nd number (5th byte is LSB of LSI address
         beq @exit
 
 ; Perform course scroll by updating the display list.
 @course_scroll:
         ldy #24
+        lda #04
+        sta _dl_index
 
         lda _row
         asl          ; shift left (multiply by 2)
@@ -85,12 +87,12 @@ VSCROL   = $d405
 @loop:  clc
         lda _address_lut,x
         adc _col
-        sta _addr_result
+        sta _addr_temp
 
         inx
         lda _address_lut,x
         adc #$00
-        sta _addr_result+1       
+        sta _addr_temp+1       
 
         ; Copy the work variable to the display list
         ; save X
@@ -98,17 +100,17 @@ VSCROL   = $d405
         pha
 
         ; load dl offset into X
-        ldx _dl_offset
+        ldx _dl_index
 
         clc
-        lda _addr_result
+        lda _addr_temp
         sta _DISPLAY_LIST_ANTIC4,x      ; LSB of 2nd number (4th byte is MSB of LSI address)
         inx
-        lda _addr_result+1
+        lda _addr_temp+1
         sta _DISPLAY_LIST_ANTIC4,x
         inx
         inx
-        stx _dl_offset  ; save current dl index
+        stx _dl_index  ; save current dl index
 
         ; restore X to address lut index
         pla

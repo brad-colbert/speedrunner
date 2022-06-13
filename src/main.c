@@ -48,10 +48,14 @@ int main()
     joy = joy_read(JOY_1);
     while (!JOY_BTN_1(joy))
     {
-        if (JOY_UP(joy))
-            --y;
-        else if (JOY_DOWN(joy))
-            ++y;
+        if (JOY_UP(joy)){
+            if(y > 0)
+                --y;
+        }
+        else if (JOY_DOWN(joy)){
+            if(y < (PF_LINES - PF_LINES_PER_PAGE)-1)
+                ++y;
+        }
 
         if (JOY_LEFT(joy)) {
             if(x > 0)
@@ -61,12 +65,6 @@ int main()
             if(x < (PF_COLS - PF_COLS_PER_PAGE)-1)
                 ++x;
         }
-
-        // Put some bounds on the coordinates
-        if(y >= (PF_LINES - PF_LINES_PER_PAGE))
-            y = PF_LINES - PF_LINES_PER_PAGE;
-        if(y < 0)
-            y = 0;
 
         scroll_playfield((u_short)x, (u_short)y);
 
