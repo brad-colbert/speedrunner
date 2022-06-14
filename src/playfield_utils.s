@@ -75,7 +75,7 @@ VSCROL   = $d405
 
 ; Perform course scroll by updating the display list.
 @course_scroll:
-        ldy #24
+        ldy #25
         lda #04
         sta _dl_index
 
