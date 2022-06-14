@@ -122,9 +122,38 @@ byte* address_lut[PF_COURSE_ROWS];
 byte playfield[PF_COURSE_ROWS + NUM_ROWS_TO_SKIP][PF_COURSE_COLS];
 #pragma bss-name (pop)
 
+// Convert an address to text hex and stores those chars
+// add a destination address.
+void addr_to_hex_to_addr(byte* src, byte* dst)
+{
+    //char lut[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+    char lut[] = {16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 33, 34, 35, 36, 37, 38};
+    u_short src_s = (u_short)src;
+    byte ival = 0x00;
+    byte value = 0x00;
+
+    // First char
+    ival = (byte)(src_s >> 8);
+    value = (ival & 0xF0) >> 4;
+    *(dst + 3) = lut[value];
+
+    // Second char
+    value = ival & 0x0F;
+    *(dst + 4) = lut[value];
+
+    // Third char
+    ival = (byte)(src_s & 0x00FF);
+    value = (ival & 0xF0) >> 4;
+    *(dst + 5) = lut[value];
+
+    // Fourth char
+    value = ival & 0x0F;
+    *(dst + 6) = lut[value];
+}
+
 void init_playfield()
 {
-    u_short page_row = 0, page_col, row;
+    byte page_row, page_col;
     int i;
 
     // Initialize the address LUT
@@ -142,21 +171,22 @@ void init_playfield()
     }
 
     // Initialize memory
-    for(page_row = 0; page_row < PF_PAGE_ROWS; ++page_row)
+    //for(page_row = 0; page_row < PF_PAGE_ROWS; ++page_row)
     {
-        for(page_col = 0; page_col < PF_PAGE_COLS; ++page_col)
+        //for(page_col = 0; page_col < PF_PAGE_COLS; ++page_col)
         {
-            for(row = 0; row < PF_ROW_TILES-1; ++row) {
-                memset((void*)&playfield[page_row * PF_ROW_TILES + row][page_col * PF_COL_TILES],
-                       (int)'a' + page_row * PF_PAGE_COLS + page_col,
-                       (size_t)PF_COL_TILES);
-
-                playfield[page_row * PF_ROW_TILES + row][page_col * PF_COL_TILES + (PF_COL_TILES-1)] = (byte)'|';        
+            for(row = 0; row < PF_COURSE_ROWS; ++row) {
+                for(col = 0; col < PF_COURSE_COLS; col+=40){
+                    byte* addr = address_lut[row] + col;
+                    addr_to_hex_to_addr(addr, addr);
+                    //cprintf("%d:%02X\n\r", row, addr);
+                }
+                /* ABC's
+                for(col = 0; col < 40; ++col){
+                    byte* addr = address_lut[row] + col;
+                    *addr = col+32;
+                }*/
             }
-
-            memset((void*)&playfield[page_row * PF_ROW_TILES + row][page_col * PF_COL_TILES],
-                    (int)'?',
-                    (size_t)PF_COL_TILES-1);
         }
     }
 
