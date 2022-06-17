@@ -36,12 +36,8 @@ int main()
     init_graphics();
     init_playfield();
 
-    #ifndef USE_JOYSTICK
-    line_d = col_d = 0;
-    #endif
-    y = x = 0;
-
     #ifdef USE_JOYSTICK
+    y = x = 0;
 
     joy_install(joy_static_stddrv);
 
@@ -76,6 +72,7 @@ int main()
     joy_uninstall();
 
     #else
+    line_d = col_d = 0;
 
     while (bounce_count < 100) // One hundred bounces
     {

@@ -6,7 +6,7 @@
 #pragma data-name (pop)
 
 #pragma data-name (push,"MYFONT")
-#include "atari-small-4x8-COLOR1.h"
+#include "atari-small-4x8-COLOR2.h"
 #pragma data-name (pop)
 
 #include <atari.h>
@@ -52,6 +52,7 @@ void init_graphics()
     OS.sdlst = &DISPLAY_LIST_ANTIC4;
     #endif
 
+    // Install our charset
     init_font();
 
     // Turn On ANTIC
