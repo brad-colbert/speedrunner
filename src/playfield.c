@@ -153,7 +153,7 @@ void addr_to_hex_to_addr(byte* src, byte* dst)
 
 void init_playfield()
 {
-    byte page_row, page_col;
+    //byte page_row, page_col;
     int i;
 
     // Initialize the address LUT
@@ -167,7 +167,7 @@ void init_playfield()
         if(addr_next % 0x1000 < (u_short)PF_COURSE_COLS)
             addr = addr_next & 0xFF00;
 
-        address_lut[i] = addr;
+        address_lut[i] = (byte*)addr;
     }
 
     // Initialize memory
