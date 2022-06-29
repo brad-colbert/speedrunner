@@ -3,7 +3,7 @@
 #include "playfield.h"
 #include "types.h"
 #include "playfield_utils.h"
-#include "player_missiles.h"
+//#include "player_missiles.h"
 
 // Atari specific includes next
 #include <atari.h>
@@ -37,7 +37,7 @@ int main()
 
     init_graphics();
     init_playfield();
-    init_player_missiles();
+    //init_player_missiles();
 
     #ifdef USE_JOYSTICK
     y = x = 0;
@@ -71,7 +71,7 @@ int main()
 
         joy = joy_read(JOY_1);
 
-        update_player_missiles();
+        //update_player_missiles();
     }
 
     joy_uninstall();

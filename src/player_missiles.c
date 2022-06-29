@@ -10,13 +10,15 @@
 PlayerMissiles player_missiles;
 #pragma bss-name (pop)
 
-int player0_image = 0;
-int anim_direction = 1;
+Player players[NUM_PLAYERS];
+
 void init_player_missiles()
 {
+    byte idx;
+
     memset(&player_missiles, 0X00, sizeof(PlayerMissiles));
 
-    memcpy(&(player_missiles.player0[60]), player_1_0, sizeof(player_1_0));
+    //memcpy(&(player_missiles.player0[60]), player_1_0, sizeof(player_1_0));
     //memset(&(player_missiles.player0[60]), 0xFF, sizeof(player_missiles.player0));
 
     ANTIC.pmbase = ((u_short)&player_missiles) >> 8;
@@ -33,40 +35,83 @@ void init_player_missiles()
     OS.paddl0 = 1;             // PMs in front of all
 
     OS.rtclok[0] = OS.rtclok[1] = OS.rtclok[2] = 0x00;
+
+    for(idx = 0; idx < NUM_PLAYERS; ++idx)
+    {
+        players[idx].dirty = 0;      // True when state changes and must be updated.
+        players[idx].x = 100;
+        players[idx].y = 60;
+        players[idx].image_idx = 0;
+        players[idx].anim_dir = 1;
+    }
+
+    // Test
+    players[0].dirty = 1;
+}
+
+void set_player_position(byte idx, byte x, byte y)
+{
+    players[idx].x = x;
+    players[idx].y = y;
+    players[idx].dirty = 1;
 }
 
 void update_player_missiles()
 {
-    if(OS.rtclok[2] > 10)
-    {
-        OS.rtclok[0] = OS.rtclok[1] = OS.rtclok[2] = 0x00;
+    byte idx;
 
-        player0_image = player0_image + anim_direction;
-        if(player0_image > 3)
+    for(idx = 0; idx < NUM_PLAYERS; +idx)
+    {        
+        if(OS.rtclok[2] > 10)
         {
-            player0_image = 2;
-            anim_direction = -1;
-        }
-        if(player0_image < 0)
-        {
-            player0_image = 0;
-            anim_direction = 1;
+            OS.rtclok[0] = OS.rtclok[1] = OS.rtclok[2] = 0x00;
+
+            if(players[idx].image_idx == 3)
+                players[idx].anim_dir = -1;
+
+            if(players[idx].image_idx == 0)
+                players[idx].anim_dir = 1;
+
+            players[idx].image_idx  = players[idx].image_idx + players[idx].anim_dir;
+
+            players[idx].dirty = 1;
         }
 
-        switch(player0_image)
+        if(players[idx].dirty)
         {
-            case 0:
-                memcpy(&(player_missiles.player0[60]), player_1_0, sizeof(player_1_0));
-            break;
-            case 1:
-                memcpy(&(player_missiles.player0[60]), player_1_1, sizeof(player_1_1));
-            break;
-            case 2:
-                memcpy(&(player_missiles.player0[60]), player_1_2, sizeof(player_1_2));
-            break;
-            case 3:
-                memcpy(&(player_missiles.player0[60]), player_1_3, sizeof(player_1_3));
-            break;
+            switch(players[idx].image_idx)
+            {
+                case 0:
+                    memcpy(&(player_missiles.player0[players[idx].y]), player_1_0, sizeof(player_1_0));
+                break;
+                case 1:
+                    memcpy(&(player_missiles.player0[players[idx].y]), player_1_1, sizeof(player_1_1));
+                break;
+                case 2:
+                    memcpy(&(player_missiles.player0[players[idx].y]), player_1_2, sizeof(player_1_2));
+                break;
+                case 3:
+                    memcpy(&(player_missiles.player0[players[idx].y]), player_1_3, sizeof(player_1_3));
+                break;
+            }
+
+            switch(idx)
+            {
+                case 0:
+                    GTIA_WRITE.hposp0 = players[0].x;
+                break;
+                case 1:
+                    GTIA_WRITE.hposp1 = players[1].x;
+                break;
+                case 2:
+                    GTIA_WRITE.hposp2 = players[2].x;
+                break;
+                case 3:
+                    GTIA_WRITE.hposp3 = players[3].x;
+                break;
+            }
+
+            players[idx].dirty = 0;
         }
     }
 }
