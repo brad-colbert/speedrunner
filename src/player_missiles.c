@@ -3,6 +3,7 @@
 #include "types.h"
 
 #include <atari.h>
+#include <conio.h>
 
 #include <string.h>
 
@@ -10,12 +11,16 @@
 PlayerMissiles player_missiles;
 #pragma bss-name (pop)
 
-Player players[NUM_PLAYERS];
+//Player players[NUM_PLAYERS];
+Player player1;
+Player player2;
+Player player3;
+Player player4;
+
+byte idx;
 
 void init_player_missiles()
 {
-    byte idx;
-
     memset(&player_missiles, 0X00, sizeof(PlayerMissiles));
 
     //memcpy(&(player_missiles.player0[60]), player_1_0, sizeof(player_1_0));
@@ -28,14 +33,15 @@ void init_player_missiles()
     OS.pcolr1 = 0x3A;  // Red
     OS.pcolr2 = 0x3A;  // Red
     OS.pcolr3 = 0x3A;  // Red
-    GTIA_WRITE.hposp0 = 100;
-    GTIA_WRITE.hposp1 = 100;
-    GTIA_WRITE.hposp2 = 100;
-    GTIA_WRITE.hposp3 = 100;
+    GTIA_WRITE.hposp0 = 0;
+    GTIA_WRITE.hposp1 = 0;
+    GTIA_WRITE.hposp2 = 0;
+    GTIA_WRITE.hposp3 = 0;
     OS.paddl0 = 1;             // PMs in front of all
 
     OS.rtclok[0] = OS.rtclok[1] = OS.rtclok[2] = 0x00;
 
+    /*
     for(idx = 0; idx < NUM_PLAYERS; ++idx)
     {
         players[idx].dirty = 0;      // True when state changes and must be updated.
@@ -47,21 +53,104 @@ void init_player_missiles()
 
     // Test
     players[0].dirty = 1;
+    */
+    player1.dirty = 1;      // True when state changes and must be updated.
+    player1.x = 0;
+    player1.y = 0;
+    player1.image_idx = 0;
+    player1.anim_dir = 1;
+    player2.dirty = 1;      // True when state changes and must be updated.
+    player2.x = 0;
+    player2.y = 0;
+    player2.image_idx = 0;
+    player2.anim_dir = 1;
+    player3.dirty = 1;      // True when state changes and must be updated.
+    player3.x = 0;
+    player3.y = 0;
+    player3.image_idx = 0;
+    player3.anim_dir = 1;
+    player4.dirty = 1;      // True when state changes and must be updated.
+    player4.x = 0;
+    player4.y = 0;
+    player4.image_idx = 0;
+    player4.anim_dir = 1;
 }
 
-void set_player_position(byte idx, byte x, byte y)
+void set_player_position(byte num, byte x, byte y)
 {
+    Player* player = &player1 + sizeof(Player) * (u_short)num;
+
+    player->x = x;
+    player->y = y;
+    player->dirty = 1;      // True when state changes and must be updated.
+
+    /*
+    //cprintf("%d: %d, %d\n\r", num, x, y);
+    switch(num)
+    {
+        case 1:
+            player1.x = x;
+            player1.y = y;
+            player1.dirty = 1;      // True when state changes and must be updated.
+        break;
+        case 2:
+            player2.x = x;
+            player2.y = y;
+            player2.dirty = 1;      // True when state changes and must be updated.
+        break;
+        case 3:
+            player3.x = x;
+            player3.y = y;
+            player3.dirty = 1;      // True when state changes and must be updated.
+        break;
+        case 4:
+            player4.x = x;
+            player4.y = y;
+            player4.dirty = 1;      // True when state changes and must be updated.
+        break;
+    }
+    */
+    /*
     players[idx].x = x;
     players[idx].y = y;
     players[idx].dirty = 1;
+    */
 }
 
 void update_player_missiles()
 {
-    byte idx;
+    Player* player;
 
-    for(idx = 0; idx < NUM_PLAYERS; +idx)
-    {        
+    for(idx = 0; idx < NUM_PLAYERS; ++idx)
+    {
+        player = &player1 + sizeof(Player) * (u_short)idx;
+
+        // Update the animation by changing the current active player sequence image
+        if(OS.rtclok[2] > 10)
+        {
+            OS.rtclok[0] = OS.rtclok[1] = OS.rtclok[2] = 0x00;
+
+            if(player->image_idx == 3)
+                player->anim_dir = -1;
+
+            if(player->image_idx == 0)
+                player->anim_dir = 1;
+
+            player->image_idx  = player->image_idx + player->anim_dir;
+
+            player->dirty = 1;
+        }
+
+        if(player->dirty)
+        {
+            // Move in Y by updating the image in memory
+            memcpy(&(player_missiles.player0[player->y]), &player_1_0[0] + sizeof(player_1_0) * player->image_idx, sizeof(player_1_0));
+
+            // Move in X by updating the PM horizontal position
+            *(&GTIA_WRITE.hposp0 + idx) = player->x;
+        }
+
+        #if 0
         if(OS.rtclok[2] > 10)
         {
             OS.rtclok[0] = OS.rtclok[1] = OS.rtclok[2] = 0x00;
@@ -95,6 +184,7 @@ void update_player_missiles()
                 break;
             }
 
+        /*
             switch(idx)
             {
                 case 0:
@@ -110,8 +200,10 @@ void update_player_missiles()
                     GTIA_WRITE.hposp3 = players[3].x;
                 break;
             }
+        */
 
             players[idx].dirty = 0;
         }
+        #endif
     }
 }

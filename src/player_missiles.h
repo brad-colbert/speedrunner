@@ -33,7 +33,12 @@ typedef struct
 } Player;
 
 #define NUM_PLAYERS 1
-extern Player players[NUM_PLAYERS];
+//extern Player players[NUM_PLAYERS];
+extern Player player1;
+extern Player player2;
+extern Player player3;
+extern Player player4;
+
 
 void set_player_position(byte idx, byte x, byte y);
 void init_player_missiles(void);
