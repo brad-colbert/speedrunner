@@ -11,11 +11,18 @@
 PlayerMissiles player_missiles;
 #pragma bss-name (pop)
 
-//Player players[NUM_PLAYERS];
-Player player1;
-Player player2;
-Player player3;
-Player player4;
+union __players {
+    Player all[NUM_PLAYERS];
+    struct {
+        Player one;
+        Player two;
+        Player three;
+        Player four;
+    };
+};
+typedef union __players Players;
+
+Players players;
 
 byte idx;
 
@@ -41,19 +48,18 @@ void init_player_missiles()
 
     OS.rtclok[0] = OS.rtclok[1] = OS.rtclok[2] = 0x00;
 
-    /*
     for(idx = 0; idx < NUM_PLAYERS; ++idx)
     {
-        players[idx].dirty = 0;      // True when state changes and must be updated.
-        players[idx].x = 100;
-        players[idx].y = 60;
-        players[idx].image_idx = 0;
-        players[idx].anim_dir = 1;
+        players.all[idx].dirty = 0;      // True when state changes and must be updated.
+        players.all[idx].x = 100;
+        players.all[idx].y = 60;
+        players.all[idx].image_idx = 0;
+        players.all[idx].anim_dir = 1;
     }
 
     // Test
-    players[0].dirty = 1;
-    */
+    players.one.dirty = 1;
+    /*
     player1.dirty = 1;      // True when state changes and must be updated.
     player1.x = 0;
     player1.y = 0;
@@ -74,11 +80,12 @@ void init_player_missiles()
     player4.y = 0;
     player4.image_idx = 0;
     player4.anim_dir = 1;
+    */
 }
 
 void set_player_position(byte num, byte x, byte y)
 {
-    Player* player = &player1 + sizeof(Player) * (u_short)num;
+    Player* player = &players.one + sizeof(Player) * (u_short)num;
 
     player->x = x;
     player->y = y;
@@ -123,7 +130,7 @@ void update_player_missiles()
 
     for(idx = 0; idx < NUM_PLAYERS; ++idx)
     {
-        player = &player1 + sizeof(Player) * (u_short)idx;
+        player = &players.one + sizeof(Player) * (u_short)idx;
 
         // Update the animation by changing the current active player sequence image
         if(OS.rtclok[2] > 10)
