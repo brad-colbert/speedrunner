@@ -49,7 +49,7 @@ int main()
     cprintf("         ");
 
     // Initialize the components
-    //init_graphics();
+    init_graphics();
     init_playfield();
     init_player_missiles();
     joy_install(joy_static_stddrv);

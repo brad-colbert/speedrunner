@@ -35,8 +35,9 @@ byte v_fs = 0x00;        // vertical fine scroll
 #pragma bss-name (push,"PLAYFIELD")
 byte* address_lut[PF_COURSE_ROWS];
 byte playfield[PF_COURSE_ROWS + NUM_ROWS_TO_SKIP][PF_COURSE_COLS];
-u_short pf_x, pf_y;
 #pragma bss-name (pop)
+coord vp_ul = {0,0};
+coord vp_lr = {PF_COLS_PER_PAGE, PF_LINES_PER_PAGE};
 
 // Convert an address to text hex and stores those chars
 // add a destination address.
@@ -98,15 +99,18 @@ void init_playfield()
 }
 
 // X and Y specify the upper left hand corner of the viewable
-// portion of the playfield.  These are in pixel space which
+// portion (viewport) of the playfield.  These are in pixel space which
 // is implemented using fine scrolling to move to the specific
 // upper left position.
-void scroll_playfield(u_short x, u_short y)
+void set_playfield_viewport(u_short x, u_short y)
 {
     byte h_fs_lcl, v_fs_lcl, col_lcl, row_lcl;
 
-    pf_x = x;
-    pf_y = y;
+    // Update the current coords for the viewport
+    vp_ul.x = x;
+    vp_ul.y = y;
+    vp_lr.x = vp_ul.x + PF_COLS_PER_PAGE;
+    vp_lr.y = vp_ul.y + PF_LINES_PER_PAGE;
 
     // Fine scroll coordinates
     h_fs_lcl = PF_COL_PIX - (byte)(x %  (u_short)PF_COL_PIX);

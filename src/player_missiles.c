@@ -90,8 +90,8 @@ void update_player_missiles()
             short screen_x, screen_y;
 
             // Only draw it on the screen.
-            screen_x = (short)player->x - pf_x;
-            screen_y = (short)player->y - pf_y;
+            screen_x = (short)player->x - vp_ul.x;
+            screen_y = (short)player->y - vp_ul.y;
 
             if(screen_x > PF_MAX_X)
                 x = PF_MAX_X;
