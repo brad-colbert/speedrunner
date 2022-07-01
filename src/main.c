@@ -1,4 +1,5 @@
 // Our includes first
+#include "mechanics.h"
 #include "graphics.h"
 #include "playfield.h"
 #include "types.h"
@@ -15,19 +16,99 @@
 #include <unistd.h>
 #include <string.h>
 
-#define USE_JOYSTICK
+#define USE_PLAYERS_DRIVE_SCROLL
 #define DELAY 128
+#define JOY_3 2
+#define JOY_4 3
 
-extern u_short line_r, col_r;
+byte joys[4];
+
+void read_joysticks()
+{
+    switch(num_players)
+    {
+        case 4:
+            joys[3] = joy_read(JOY_4);
+        case 3:
+            joys[2] = joy_read(JOY_3);
+        case 2:
+            joys[1] = joy_read(JOY_2);
+        default:
+            joys[0] = joy_read(JOY_1);
+    }
+}
 
 int main()
 {
+    #ifdef USE_PLAYERS_DRIVE_SCROLL
+    u_short delay;
+
+    // Debug pause
+    cprintf("\rHit Key\r");
+    cgetc();  // Pause
+    cprintf("         ");
+
+    // Initialize the components
+    //init_graphics();
+    init_playfield();
+    init_player_missiles();
+    joy_install(joy_static_stddrv);
+
+    // Set the number of players (will be done on the opening screen)
+    num_players = 1;
+
+    // Initial joystick read
+    read_joysticks();
+
+    while(1)
+    {
+        byte idx;
+        for(idx = 0; idx < num_players; ++idx)
+        {
+            byte joy = joys[idx];
+            if (JOY_UP(joys[idx])){
+                if(players.all[idx].y > PF_MIN_Y)
+                {
+                    --players.all[idx].y;
+                    players.all[idx].dirty = 1;
+                }
+            }
+            else if (JOY_DOWN(joys[idx])){
+                if(players.all[idx].y < (PF_LINES - PF_LINES_PER_PAGE - (255-PF_MAX_Y))-1)
+                {
+                    ++players.all[idx].y;
+                    players.all[idx].dirty = 1;
+                }
+            }
+            if (JOY_LEFT(joys[idx])) {
+                if(players.all[idx].x > PF_MIN_X)
+                {
+                    --players.all[idx].x;
+                    players.all[idx].dirty = 1;
+                }
+            }
+            else if (JOY_RIGHT(joys[idx])) {
+                if(players.all[idx].x < (PF_COLS - PF_COLS_PER_PAGE - (255-PF_MAX_X))-1)
+                {
+                    ++players.all[idx].x;
+                    players.all[idx].dirty = 1;
+                }
+            }
+        }
+
+        update_player_missiles();
+        update_playfield_using_players();
+
+        for(delay = 0; delay < DELAY; ++delay);
+
+        read_joysticks();
+    }
+
+    #endif //USE_PLAYERS_DRIVE_SCROLL
+
     #ifdef USE_JOYSTICK
-    int joy;
-    #else
-    u_short line_d, col_d;
-    byte bounce_count = 0;
-    #endif
+
+    byte joy;
     u_short delay;
     u_short x, y;
 
@@ -38,7 +119,8 @@ int main()
     init_playfield();
     init_player_missiles();
 
-    #ifdef USE_JOYSTICK
+    num_players = 1;
+
     y = x = 0;
 
     joy_install(joy_static_stddrv);
@@ -75,7 +157,21 @@ int main()
 
     joy_uninstall();
 
-    #else
+    #endif // USE_JOYSTICK
+
+    #ifdef USE_BOUNCE_TEST
+    u_short line_d, col_d;
+    byte bounce_count = 0;
+
+    u_short delay;
+    u_short x, y;
+
+    cprintf("Hit Key");
+    cgetc();  // Pause
+
+    init_graphics();
+    init_playfield();
+
     line_d = col_d = 0;
 
     while (bounce_count < 100) // One hundred bounces
@@ -110,7 +206,7 @@ int main()
         //sleep(1);
     }
 
-    #endif
+    #endif // USE_BOUNCE_TEST
 
     close_graphics();
 

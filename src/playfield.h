@@ -30,7 +30,7 @@ extern byte playfield[PF_COURSE_ROWS + NUM_ROWS_TO_SKIP][PF_COURSE_COLS];
 
 void init_playfield(void);
 
-extern u_short line_r, col_r;
-void scroll_playfield(u_short line, u_short col);
+extern u_short pf_x, pf_y;
+void scroll_playfield(u_short x, u_short y);
 
 #endif // __PLAYFIELD_H__
