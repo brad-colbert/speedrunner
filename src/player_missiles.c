@@ -23,9 +23,6 @@ void init_player_missiles()
 {
     memset(&player_missiles, 0X00, sizeof(PlayerMissiles));
 
-    //memcpy(&(player_missiles.player0[60]), player_1_0, sizeof(player_1_0));
-    //memset(&(player_missiles.player0[60]), 0xFF, sizeof(player_missiles.player0));
-
     ANTIC.pmbase = ((u_short)&player_missiles) >> 8;
     OS.sdmctl = OS.sdmctl | DMACTL_PLAYFIELD_NORMAL | DMACTL_DMA_PLAYERS | DMACTL_DMA_MISSILES | DMACTL_DMA_FETCH | PLAYER_LINE_MODE;
     GTIA_WRITE.gractl = 0x03;
