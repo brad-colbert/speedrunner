@@ -18,12 +18,14 @@ byte num_players = 0;
 #pragma data-name(pop)
 
 Players players;
+u_short SDMCTL_SAVE;
 
 void init_player_missiles()
 {
     memset(&player_missiles, 0X00, sizeof(PlayerMissiles));
 
     ANTIC.pmbase = ((u_short)&player_missiles) >> 8;
+    SDMCTL_SAVE = OS.sdmctl;
     OS.sdmctl = OS.sdmctl | DMACTL_PLAYFIELD_NORMAL | DMACTL_DMA_PLAYERS | DMACTL_DMA_MISSILES | DMACTL_DMA_FETCH | PLAYER_LINE_MODE;
     GTIA_WRITE.gractl = 0x03;
     OS.pcolr0 = GTIA_COLOR_LIGHTRED; //0x3A;  // Red
@@ -48,6 +50,13 @@ void init_player_missiles()
     }
 }
 
+void close_player_missiles(void)
+{
+    memset(&player_missiles, 0X00, sizeof(PlayerMissiles));
+    GTIA_WRITE.gractl = 0x00;
+    OS.sdmctl = SDMCTL_SAVE;
+}
+
 void set_player_position(byte num, byte x, byte y)
 {
     Player* player = &players.one + sizeof(Player) * (u_short)num;
@@ -60,6 +69,27 @@ void set_player_position(byte num, byte x, byte y)
 void update_player_missiles()
 {
     Player* player;
+
+    // Quick check on collision
+    if(GTIA_READ.p0pf)
+    {
+        switch(GTIA_READ.p0pf)
+        {
+            case 0x01:
+                OS.pcolr0 = GTIA_COLOR_WHITE;
+            break;
+            case 0x02:
+                OS.pcolr0 = GTIA_COLOR_GREEN;
+            break;
+            case 0x04:
+                OS.pcolr0 = GTIA_COLOR_BROWN;
+            break;
+        }
+
+        GTIA_WRITE.hitclr = 0x01;
+    }
+    else
+        OS.pcolr0 = GTIA_COLOR_LIGHTRED;
 
     for(idx = 0; idx < num_players; ++idx)
     {

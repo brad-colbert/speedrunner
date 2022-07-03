@@ -60,7 +60,7 @@ int main()
     // Initial joystick read
     read_joysticks();
 
-    while(1)
+    while(!JOY_BTN_1(joys[0]))
     {
         byte idx;
         for(idx = 0; idx < num_players; ++idx)
@@ -208,6 +208,7 @@ int main()
 
     #endif // USE_BOUNCE_TEST
 
+    close_player_missiles();
     close_graphics();
 
     cprintf("Hit Key To Close");

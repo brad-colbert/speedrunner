@@ -3,7 +3,7 @@
 
 #include "types.h"
 
-#define PMG_SINGLE_LINE
+//#define PMG_SINGLE_LINE
 #define PLAYER_WIDTH 8
 #ifdef PMG_SINGLE_LINE
 #define PLAYER_HEIGHT 256
@@ -62,5 +62,6 @@ extern byte num_players;
 void set_player_position(byte idx, byte x, byte y);
 void init_player_missiles(void);
 void update_player_missiles(void);
+void close_player_missiles(void);
 
 #endif // __PLAYER_MISSILES_H__
