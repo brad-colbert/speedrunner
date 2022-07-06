@@ -17,7 +17,7 @@
 #include <string.h>
 
 #define USE_PLAYERS_DRIVE_SCROLL
-#define DELAY 128
+#define DELAY 64
 #define JOY_3 2
 #define JOY_4 3
 
@@ -49,10 +49,13 @@ int main()
     cprintf("         ");
 
     // Initialize the components
-    init_graphics();
     init_playfield();
+    init_graphics();
     init_player_missiles();
     joy_install(joy_static_stddrv);
+
+    // Make sure the playfield is initialized
+    set_playfield_viewport(0, 0);
 
     // Set the number of players (will be done on the opening screen)
     num_players = 1;

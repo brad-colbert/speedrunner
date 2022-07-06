@@ -8,6 +8,7 @@
 #include <conio.h>
 
 // Standard C includes
+#include <stdio.h>
 #include <unistd.h>
 #include <string.h>
 
@@ -27,15 +28,15 @@ byte h_fs = 0x00;        // horizontal fine scroll
 byte v_fs = 0x00;        // vertical fine scroll
 #pragma data-name(pop)
 
-// There could be an issue where adding the number of skip lines to the
-// playfield buffer makes you cross another 4K boundary... we'll deal with
-// that later.
-#define NUM_ROWS_TO_SKIP (PF_COURSE_ROWS / (4096 / PF_COURSE_COLS))
-
+//#define DEFINE_PF_LOCALY
+#ifdef DEFINE_PF_LOCALY
 #pragma bss-name (push,"PLAYFIELD")
-byte* address_lut[PF_COURSE_ROWS];
-byte playfield[PF_COURSE_ROWS + NUM_ROWS_TO_SKIP][PF_COURSE_COLS];
+byte playfield[PF_COURSE_ROWS + NUM_4K_OVERLAPS][PF_COURSE_COLS];
 #pragma bss-name (pop)
+#else
+#include "playfield_1.h"
+#endif
+byte* address_lut[PF_COURSE_ROWS];
 coord vp_ul = {0,0};
 coord vp_lr = {PF_COLS_PER_PAGE, PF_LINES_PER_PAGE};
 
@@ -71,6 +72,8 @@ void addr_to_hex_to_addr(byte* src, byte* dst)
 void init_playfield()
 {
     int i;
+    FILE* fp;
+    byte rows, cols;
 
     // Initialize the address LUT
     address_lut[0] = (byte*)playfield;
@@ -86,6 +89,26 @@ void init_playfield()
         address_lut[i] = (byte*)addr;
     }
 
+    fp = fopen("D:z1.srm", "rb");
+    if(fp != NULL)
+    {
+        cprintf("\r                         \r%p\n\r", fp);
+
+        rows = fgetc(fp);
+        cols = fgetc(fp);
+        cprintf("%d, %d\n\r", rows, cols);
+
+        i = fread(playfield, rows * cols, 1, fp);
+
+        cprintf("Read %d bytes\n\r", i);
+        cgetc();
+
+        fclose(fp);
+    }
+    else
+        cprintf("\nUnable to open map file      ");
+
+    #if 0
     for(row = 0; row < PF_COURSE_ROWS; ++row)
     {
         for(col = 0; col < PF_COURSE_COLS; col+=40)
@@ -94,6 +117,7 @@ void init_playfield()
             addr_to_hex_to_addr(addr, addr);
         }
     }
+    #endif
 
     setup_vbi();
 }

@@ -3,7 +3,7 @@
 
 #include "types.h"
 
-//#define PMG_SINGLE_LINE
+#define PMG_SINGLE_LINE
 #define PLAYER_WIDTH 8
 #ifdef PMG_SINGLE_LINE
 #define PLAYER_HEIGHT 256

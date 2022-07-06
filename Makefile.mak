@@ -7,8 +7,10 @@ PRODUCT=sr
 TARGET=atari
 SRC_DIR=src
 
+DIR2ATR_PATH=C:\Users\bradc\Projects\Atari
+
 .SUFFIXES:
-.SUFFIXES: .c .s .o
+.SUFFIXES: .c .s .o .dat .srm
 
 all: $(PRODUCT).xex
 
@@ -29,10 +31,14 @@ link_files: $(SRC_DIR)\*.o
 .c.s:
   $(CC65) -t $(TARGET) -g $<
 
+.dat.srm:
+  python3 tools\import_map.py
+
 $(PRODUCT).xex: c_files s_files link_files
 
 clean: s_products c_products
   del $(PRODUCT).xex $(PRODUCT).map
+  rmdir /Q /S diskdir
 
 c_products: $(SRC_DIR)\*.c
     @echo Cleaning $(**:.c=.s)
@@ -41,3 +47,19 @@ c_products: $(SRC_DIR)\*.c
 s_products: $(SRC_DIR)\*.s
     @echo Cleaning $(**:.s=.o)
     del $(**:.s=.o)
+
+diskdir: $(PRODUCT).xex
+    mkdir diskdir
+    copy DOS.SYS diskdir\\
+    copy $(PRODUCT).xex diskdir\AUTORUN.SYS
+    copy *.srm diskdir\\
+
+#    $(DIR2ATR_PATH)\dir2atr -d -b PicoBoot406 -P speedr.atr diskdir
+#    $(DIR2ATR_PATH)\dir2atr -d -a -b MyPicoDos406 -P speedr.atr diskdir
+disk: diskdir
+    @echo Building bootable disk
+    $(DIR2ATR_PATH)\dir2atr -E -b Dos25 -P speedr.atr diskdir
+
+debug: disk
+  Altirra64 /defprofile:800 /ntsc /burstio /fastboot /debug /debugbrkrun /debugcmd: ".loadsym sr.lbl" /disk speedr.atr
+
