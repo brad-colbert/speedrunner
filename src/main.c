@@ -77,7 +77,8 @@ int main()
                 }
             }
             else if (JOY_DOWN(joys[idx])){
-                if(players.all[idx].y < (PF_LINES - PF_LINES_PER_PAGE - (255-PF_MAX_Y))-1)
+                //if(players.all[idx].y < (PF_LINES - PF_LINES_PER_PAGE - (255-PF_MAX_Y))-1)
+                if(players.all[idx].y < PF_LINES + PF_LINES_PER_PAGE)
                 {
                     ++players.all[idx].y;
                     players.all[idx].dirty = 1;
@@ -91,7 +92,8 @@ int main()
                 }
             }
             else if (JOY_RIGHT(joys[idx])) {
-                if(players.all[idx].x < (PF_COLS - PF_COLS_PER_PAGE - (255-PF_MAX_X))-1)
+                //if(players.all[idx].x < (PF_COLS - PF_COLS_PER_PAGE - (255-PF_MAX_X))-1)
+                if(players.all[idx].x < PF_COLS + PF_COLS_PER_PAGE)
                 {
                     ++players.all[idx].x;
                     players.all[idx].dirty = 1;

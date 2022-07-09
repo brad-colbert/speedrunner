@@ -9,7 +9,7 @@
 
 // Standard C includes
 #include <stdio.h>
-#include <unistd.h>
+//#include <unistd.h>
 #include <string.h>
 
 #define COLOR_CLOCK_BUFF 4
@@ -28,7 +28,7 @@ byte h_fs = 0x00;        // horizontal fine scroll
 byte v_fs = 0x00;        // vertical fine scroll
 #pragma data-name(pop)
 
-//#define DEFINE_PF_LOCALY
+#define DEFINE_PF_LOCALY
 #ifdef DEFINE_PF_LOCALY
 #pragma bss-name (push,"PLAYFIELD")
 byte playfield[PF_COURSE_ROWS + NUM_4K_OVERLAPS][PF_COURSE_COLS];
@@ -72,12 +72,34 @@ void addr_to_hex_to_addr(byte* src, byte* dst)
 void init_playfield()
 {
     int i;
-    FILE* fp;
     byte rows, cols;
+    u_short next_addr, over;
+    #define LOAD_MAP
+    #ifdef LOAD_MAP
+    FILE* fp;
+    #endif
 
     // Initialize the address LUT
     address_lut[0] = (byte*)playfield;
 
+    //cprintf("\nPF_COURSE_ROWS=%d\n\r", PF_COURSE_ROWS);
+    for(i = 0; i < PF_COURSE_ROWS-1; ++i)
+    {
+        next_addr = (u_short)(address_lut[i]) + (u_short)PF_COURSE_COLS;
+        over = next_addr % 0x1000;
+        //cprintf("over=%d\n\r", over);
+        if(over < PF_COURSE_COLS)
+        {
+            u_short skip = (next_addr & 0xFF00) - (u_short)(address_lut[i]);
+            //cprintf("%d:%02x crosses a 4K boundary\n\r", i, (u_short)(address_lut[i]));
+            next_addr = next_addr & 0xFF00;
+            //cprintf("    Will skip %d bytes to land on %02X\n\r", skip, next_addr);
+        }
+
+        address_lut[i+1] = next_addr;
+    }
+    //cgetc();
+    /*
     for(i = 1; i < PF_COURSE_ROWS; ++i)
     {
         u_short addr = (u_short)(address_lut[i-1]) + (u_short)PF_COURSE_COLS;
@@ -88,7 +110,10 @@ void init_playfield()
 
         address_lut[i] = (byte*)addr;
     }
+    */
 
+    // Load the first map
+    #ifdef LOAD_MAP
     fp = fopen("D:z1.srm", "rb");
     if(fp != NULL)
     {
@@ -107,8 +132,7 @@ void init_playfield()
     }
     else
         cprintf("\nUnable to open map file      ");
-
-    #if 0
+    #else
     for(row = 0; row < PF_COURSE_ROWS; ++row)
     {
         for(col = 0; col < PF_COURSE_COLS; col+=40)

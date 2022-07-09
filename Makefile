@@ -256,7 +256,7 @@ DISK     = sr.atr
 
 disk: $(DISK)
 
-all: $(PROGRAM)
+all: $(PROGRAM) $(DISK)
  
 -include $(DEPENDS)
 -include $(STATEFILE)
@@ -358,13 +358,16 @@ cp $(file) atr/$(notdir $(file))
 #cp images/Funn43c6.yai atr/$(notdir $(file))
 endef # ATR_WRITE_recipe
 $(DISK): $(PROGRAM)
-	@mkdir atr
+#	@mkdir atr
 #	@$(foreach file,$(PROGRAM),$(ATR_WRITE_recipe))
 #	@$(foreach file,images/Funn43c6.yai,$(ATR_WRITE_recipe))
 #	$(DIR2ATR) -D -b DosXL230 $@ atr
-	cp $(PROGRAM) images/* atr
-	$(DIR2ATR) -d $@ atr
-	@$(RMDIR) atr
+#	cp $(PROGRAM) images/* atr
+#	$(DIR2ATR) -d $@ atr
+#	@$(RMDIR) atr
+	cp speedr.atr $(DISK)
+	atr $(DISK) rm autorun.sys
+	atr $(DISK) put $(PROGRAM) AUTORUN.SYS
 
 ###################################################################
 ###  Place your additional targets in the additional Makefiles  ###

@@ -40,6 +40,9 @@ with open('speedrunner_1.atrmap.dat', 'rb') as rf:
 
         addr = next_addr
         data = rf.read(PF_COURSE_COLS)
+        row = row + 1
+
+    print('Total rows', row)
 
     # Pad alldata to end on a PF_COURSE_COLS
     remaining = PF_COURSE_COLS - (len(alldata) % PF_COURSE_COLS)
