@@ -25,4 +25,9 @@ feature/scrolling and feature/vbi: Exploring and implementing the vertical blank
 Since the VBI may happen in the middle of computing the scroll values, updates are coordinated with a flag that sits in 0 page.  The update will not happen as long as the **scroll_flag** is > 0.  Basically this is a simple, non blocking mutex.
 
 ### 0.2
-feature/player_missile:
+feature/player_missiles: This implements the players and the memory structures used to manage them.  There is, currently, an example animation of P0.  Each is single line height.  Player data are stored in *player_#.h*.  The main player functions are in *player_missile.h/c*.  Basic motion mechanics are implemented in *player_missile.h/c* but I've started to move them to *mechanics.h/c* because the player positions are use to determine the location of the "viewport" of the playfield.
+
+There is a very simple example implementation of player+playfield collision using the GTIA hardware in *player_missile.c:update_player_missiles()*.  I understand that I should consider doing this on the CPU side, but there is a good chance I can get away with using the facilities available.  As implemented it simply changes the color of the player to represent what it's collided with.
+Currently, this is a bit of a mess and is a work in progress.
+
+### 0.3
