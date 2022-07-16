@@ -18,3 +18,7 @@ In this project I will try to capture an evolution of capabilities.  I will try 
 INITIAL(main): This is simply the initial commit with some test code that is the begining of me figuring out how to do fine scrolling.  Basically it has the rough implementation of course scrolling (with DL manipulation) as well as fine scrolling (with updates to VSCROL).
 
 I think I'll stick with ANTIC mode 4 (4 color text) and make tiles out of a new charset that will build the playfield.  Roughly 960bytes per screen versus about 4K for GFX7, which means I should be able to keep each complete playfield in memory.  Once I work on some fast paging scheme, then I can switch to GFX7.
+
+### 0.1
+feature/vbi: Exploring and implementing the vertical blank interupt.  Most of this code exists in the assembly file *update_scroll.s*.  This actually implements both the course and fine scrolling.  The coordinates are absolute, computed on the C side (math(s) is hard in assembly... well... for me) and the updates are coordinated with a flag that sits in 0 page.  The update will not happen as long as the **scroll_flag** is > 0.  Basically this is a simple, non blocking mutex.
+
