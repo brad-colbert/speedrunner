@@ -7,7 +7,7 @@ PRODUCT=sr
 TARGET=atari
 SRC_DIR=src
 
-DIR2ATR_PATH=C:\Users\bradc\Projects\Atari
+DIR2ATR_PATH=C:\Users\bradc\Projects\Atari\tools
 
 .SUFFIXES:
 .SUFFIXES: .c .s .o .dat .srm
@@ -37,7 +37,7 @@ link_files: $(SRC_DIR)\*.o
 $(PRODUCT).xex: c_files s_files link_files
 
 clean: s_products c_products
-  del $(PRODUCT).xex $(PRODUCT).map
+  del $(PRODUCT).xex $(PRODUCT).map speedr.atr
   rmdir /Q /S diskdir
 
 c_products: $(SRC_DIR)\*.c
@@ -61,5 +61,5 @@ disk: diskdir
     $(DIR2ATR_PATH)\dir2atr -E -b Dos25 -P speedr.atr diskdir
 
 debug: disk
-  Altirra64 /defprofile:800 /ntsc /burstio /fastboot /debug /debugbrkrun /debugcmd: ".loadsym sr.lbl" /disk speedr.atr
+  Altirra64 /defprofile:xl /ntsc /burstio /fastboot /debug /debugbrkrun /debugcmd: ".loadsym sr.lbl" /disk speedr.atr
 

@@ -5,12 +5,6 @@
 #include "dl.h"
 #pragma data-name (pop)
 
-/*
-#pragma data-name (push,"MYFONT")
-#include "atari-small-4x8-COLOR2.h"
-#pragma data-name (pop)
-*/
-
 #include <atari.h>
 #include <conio.h>
 
@@ -19,7 +13,14 @@ byte SDMCTL_PREV;
 short SDLST_PREV;
 byte* DL;
 
+//#define LOAD_FONT
+#ifdef LOAD_FONT
+#pragma data-name (push,"MYFONT")
+#include "atari-small-4x8-COLOR2.h"
+#pragma data-name (pop)
+#else
 extern char* font;
+#endif
 
 void init_font()
 {
@@ -34,10 +35,7 @@ void init_font()
     #endif
 
     // Use the new charset
-    //OS.chbas = (byte)(((u_short)font)>>8);
-    //cprintf("\r%02x : %d         ", font_addr, (u_short)font >> 8);
-    //cgetc();  // Pause
-    OS.chbas = 0x98;//(byte)((u_short)font >> 8);
+    OS.chbas = (byte)((short)&font >> 8);
 }
 
 void init_graphics()

@@ -1,4 +1,4 @@
-.segment	"DATA"
+; .segment	"DATA"
 .segment	"MYFONT"
 .export _font
 _font:
@@ -130,4 +130,4 @@ _font:
 	.BYTE $C0,$30,$30,$0C,$30,$30,$C0,$00
 	.BYTE $00,$00,$F0,$3C,$00,$00,$00,$00
 	.BYTE $00,$00,$00,$00,$00,$00,$00,$00
-.segment	"DATA"
+; .segment	"DATA"

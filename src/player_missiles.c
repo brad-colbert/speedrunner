@@ -111,6 +111,9 @@ void update_player_missiles()
             player->dirty = 1;
         }
 
+        // Position dynamics with limitations, keeps the player relative to the ULC of the vieport
+        // and makes sure that it doesn't scroll off the screen.  The limitation code will probably
+        // move to mechanics.h/c.
         if(player->dirty)
         {
             byte x, y;

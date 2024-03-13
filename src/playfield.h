@@ -30,7 +30,7 @@
 //#define NUM_ROWS_TO_SKIP (PF_COURSE_ROWS / (4096 / PF_COURSE_COLS))
 #define NUM_4K_OVERLAPS ((PF_COURSE_ROWS * PF_COURSE_COLS / 4096) - 1)
 
-extern byte playfield[PF_COURSE_ROWS + NUM_4K_OVERLAPS][PF_COURSE_COLS];
+extern byte playfield[100][160]; //[PF_COURSE_ROWS + NUM_4K_OVERLAPS][PF_COURSE_COLS];
 //extern byte playfield[][];
 extern coord vp_ul, vp_lr;
 

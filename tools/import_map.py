@@ -14,8 +14,8 @@ NUM_4K_OVERLAPS = int((PF_COURSE_ROWS * PF_COURSE_COLS / 4096) - 1)
 
 print(NUM_4K_OVERLAPS)
 
-with open('speedrunner_1.atrmap.dat', 'rb') as rf:
-    row = 0
+with open('speedrunner_grid_test.atrmap.dat', 'rb') as rf:
+    row = 1
     addr = 0
     alldata = bytes()
 
@@ -24,6 +24,7 @@ with open('speedrunner_1.atrmap.dat', 'rb') as rf:
     while data:
         # Check if this row crosses a 4K (0x1000) boundary.  If so we need to
         # add buffer data to push the next row onto the 4K boundary.
+        '''
         next_addr = addr + PF_COURSE_COLS
         over = next_addr % 4096
         skip_bytes = bytes()
@@ -33,24 +34,25 @@ with open('speedrunner_1.atrmap.dat', 'rb') as rf:
             next_addr = next_addr & 0xFF00
             print('\tWill skip %d bytes to land on %02X' %(skip, next_addr))
             skip_bytes = bytes(skip)
+        '''
 
         # Write out the bytes
         #print('Writing', len(data), '+', len(skip_bytes))
-        alldata = alldata + data + skip_bytes
+        alldata = alldata + data #  + skip_bytes
 
-        addr = next_addr
+        #addr = next_addr
         data = rf.read(PF_COURSE_COLS)
         row = row + 1
 
     print('Total rows', row)
 
     # Pad alldata to end on a PF_COURSE_COLS
-    remaining = PF_COURSE_COLS - (len(alldata) % PF_COURSE_COLS)
-    print('padding', len(alldata), remaining)
-    alldata = alldata + bytes(remaining)
+    #remaining = PF_COURSE_COLS - (len(alldata) % PF_COURSE_COLS)
+    #print('padding', len(alldata), remaining)
+    #alldata = alldata + bytes(remaining)
 
     # Open output file
-    with open('playfield_1.h', 'w') as wf:
+    with open('playfield_grid_test.h', 'w') as wf:
         wf.write('#ifndef __PLAYFIELD_1_H__\n')
         wf.write('#define __PLAYFIELD_1_H__\n')
         wf.write('#include \"types.h\"\n\n')
@@ -81,7 +83,7 @@ with open('speedrunner_1.atrmap.dat', 'rb') as rf:
 
     # Open output file
     import struct
-    with open('z1.srm', 'wb') as wf:
+    with open('z2.srm', 'wb') as wf:
         wf.write(struct.pack('B', PF_COURSE_ROWS + NUM_4K_OVERLAPS))
         wf.write(struct.pack('B', PF_COURSE_COLS))
 

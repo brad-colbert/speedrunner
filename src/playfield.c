@@ -6,10 +6,10 @@
 // Atari specific includes next
 #include <atari.h>
 #include <conio.h>
+#include <peekpoke.h>
 
 // Standard C includes
 #include <stdio.h>
-//#include <unistd.h>
 #include <string.h>
 
 #define COLOR_CLOCK_BUFF 4
@@ -28,17 +28,19 @@ byte h_fs = 0x00;        // horizontal fine scroll
 byte v_fs = 0x00;        // vertical fine scroll
 #pragma data-name(pop)
 
-#define DEFINE_PF_LOCALY
+//#define DEFINE_PF_LOCALY
 #ifdef DEFINE_PF_LOCALY
-#pragma bss-name (push,"PLAYFIELD")
+#pragma data-name (push,"PLAYFIELD")
 byte playfield[PF_COURSE_ROWS + NUM_4K_OVERLAPS][PF_COURSE_COLS];
-#pragma bss-name (pop)
+#pragma data-name (pop)
 #else
 #include "playfield_1.h"
 #endif
 byte* address_lut[PF_COURSE_ROWS];
 coord vp_ul = {0,0};
 coord vp_lr = {PF_COLS_PER_PAGE, PF_LINES_PER_PAGE};
+
+extern void DISPLAY_LIST_ANTIC4;
 
 // Convert an address to text hex and stores those chars
 // add a destination address.
@@ -49,24 +51,25 @@ void addr_to_hex_to_addr(byte* src, byte* dst)
     u_short src_s = (u_short)src;
     byte ival = 0x00;
     byte value = 0x00;
+    #define OFFSET 0
 
     // First char
     ival = (byte)(src_s >> 8);
     value = (ival & 0xF0) >> 4;
-    *(dst + 3) = lut[value];
+    *(dst + OFFSET + 0) = lut[value];
 
     // Second char
     value = ival & 0x0F;
-    *(dst + 4) = lut[value];
+    *(dst + OFFSET + 1) = lut[value];
 
     // Third char
     ival = (byte)(src_s & 0x00FF);
     value = (ival & 0xF0) >> 4;
-    *(dst + 5) = lut[value];
+    *(dst + OFFSET + 2) = lut[value];
 
     // Fourth char
     value = ival & 0x0F;
-    *(dst + 6) = lut[value];
+    *(dst + OFFSET + 3) = lut[value];
 }
 
 void init_playfield()
@@ -79,27 +82,32 @@ void init_playfield()
     FILE* fp;
     #endif
 
+    // Fill the address LUT used for faster scrolling
     // Initialize the address LUT
-    address_lut[0] = (byte*)playfield;
-
-    //cprintf("\nPF_COURSE_ROWS=%d\n\r", PF_COURSE_ROWS);
-    for(i = 0; i < PF_COURSE_ROWS-1; ++i)
+    rows = 0;
+    next_addr = (u_short)playfield;
+    for(i = 0; i < PF_COURSE_ROWS; ++i)
     {
-        next_addr = (u_short)(address_lut[i]) + (u_short)PF_COURSE_COLS;
-        over = next_addr % 0x1000;
-        //cprintf("over=%d\n\r", over);
-        if(over < PF_COURSE_COLS)
-        {
-            u_short skip = (next_addr & 0xFF00) - (u_short)(address_lut[i]);
-            //cprintf("%d:%02x crosses a 4K boundary\n\r", i, (u_short)(address_lut[i]));
-            next_addr = next_addr & 0xFF00;
-            //cprintf("    Will skip %d bytes to land on %02X\n\r", skip, next_addr);
-        }
+        address_lut[i] = next_addr;
 
-        address_lut[i+1] = next_addr;
+        next_addr = (u_short)(address_lut[i]) + (u_short)PF_COURSE_COLS;
+        over = (next_addr + (u_short)PF_COURSE_COLS) % (u_short)0x1000;  // can't cross 4K boundary
+        if(over < (u_short)PF_COURSE_COLS)
+        {
+            next_addr = (next_addr & (u_short)0xF000) + (u_short)0x1000;
+            ++row;  // count the number of 4K overlaps
+        }
     }
-    //cgetc();
-    /*
+    cprintf("Row overlaps: %d\n\r", row);
+    cgetc();
+    // initialize addresses in the display list
+    for(i = 0; i < PF_ROW_TILES; ++i)
+    {
+        POKEW(((byte*)&DISPLAY_LIST_ANTIC4) + 4 + i * 3, address_lut[i]);
+    }
+
+    //#define GEN_TEST_MAP
+    #ifdef GEN_TEST_MAP
     for(i = 1; i < PF_COURSE_ROWS; ++i)
     {
         u_short addr = (u_short)(address_lut[i-1]) + (u_short)PF_COURSE_COLS;
@@ -110,11 +118,11 @@ void init_playfield()
 
         address_lut[i] = (byte*)addr;
     }
-    */
+    #endif
 
     // Load the first map
     #ifdef LOAD_MAP
-    fp = fopen("D:z1.srm", "rb");
+    fp = fopen("D:z2.srm", "rb");
     if(fp != NULL)
     {
         cprintf("\r                         \r%p\n\r", fp);
@@ -123,9 +131,13 @@ void init_playfield()
         cols = fgetc(fp);
         cprintf("%d, %d\n\r", rows, cols);
 
-        i = fread(playfield, rows * cols, 1, fp);
+        over = 0;
+        for(i = 0; i < PF_COURSE_ROWS; ++i)
+        {
+            over += fread(address_lut[i], 1, PF_COURSE_COLS, fp);
+        }
 
-        cprintf("Read %d bytes\n\r", i);
+        cprintf("Read %d bytes\n\r", over);
         cgetc();
 
         fclose(fp);
@@ -146,7 +158,7 @@ void init_playfield()
     setup_vbi();
 }
 
-// X and Y specify the upper left hand corner of the viewable
+// X and Y specify the upper left hand corner (ULC) of the viewable
 // portion (viewport) of the playfield.  These are in pixel space which
 // is implemented using fine scrolling to move to the specific
 // upper left position.
@@ -160,14 +172,14 @@ void set_playfield_viewport(u_short x, u_short y)
     vp_lr.x = vp_ul.x + PF_COLS_PER_PAGE;
     vp_lr.y = vp_ul.y + PF_LINES_PER_PAGE;
 
-    // Fine scroll coordinates
-    h_fs_lcl = PF_COL_PIX - (byte)(x %  (u_short)PF_COL_PIX);
-    v_fs_lcl = (byte)(y % (u_short)PF_ROW_PIX); 
-
     // Course scroll coordinates are used to select the byte level
     // memory location of the playfield.
     col_lcl = (byte)(x  / (u_short)PF_COL_PIX);
     row_lcl = (byte)(y / (u_short)PF_ROW_PIX);
+
+    // Fine scroll coordinates
+    h_fs_lcl = PF_COL_PIX - (byte)(x %  (u_short)PF_COL_PIX);
+    v_fs_lcl = (byte)(y % (u_short)PF_ROW_PIX); 
 
     // Update the memory locations used by the VBI so it can update
     // the display lists (for course scroll) and fine scroll memory locations.

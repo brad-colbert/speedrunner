@@ -78,7 +78,7 @@ int main()
             }
             else if (JOY_DOWN(joys[idx])){
                 //if(players.all[idx].y < (PF_LINES - PF_LINES_PER_PAGE - (255-PF_MAX_Y))-1)
-                if(players.all[idx].y < PF_LINES + PF_LINES_PER_PAGE)
+                if(players.all[idx].y < PF_LINES + 24) // + PF_LINES_PER_PAGE)
                 {
                     ++players.all[idx].y;
                     players.all[idx].dirty = 1;
@@ -92,8 +92,14 @@ int main()
                 }
             }
             else if (JOY_RIGHT(joys[idx])) {
-                //if(players.all[idx].x < (PF_COLS - PF_COLS_PER_PAGE - (255-PF_MAX_X))-1)
-                if(players.all[idx].x < PF_COLS + PF_COLS_PER_PAGE)
+                // *** Why 32!? **
+                // On display list instructions with the horizontal scrolling bit set, ANTIC automatically expands
+                // its screen memory use to the next larger playfield size, unless it is already using a wide playfield.
+                // Scrolling with a 32 byte narrow playfield will cause ANTIC to read memory as if it were using a
+                // normal 40 byte playfield, and scrolling a normal playfield will be processed as if
+                // it were a wide 48 byte playfield.
+                // https://playermissile.com/scrolling_tutorial/index.html#interlude-wide-and-narrow-playfields
+                if(players.all[idx].x < (PF_COLS+28)) // + PF_COLS_PER_PAGE)
                 {
                     ++players.all[idx].x;
                     players.all[idx].dirty = 1;
@@ -104,7 +110,7 @@ int main()
         update_player_missiles();
         update_playfield_using_players();
 
-        for(delay = 0; delay < DELAY; ++delay);
+        //for(delay = 0; delay < DELAY; ++delay);
 
         read_joysticks();
     }
