@@ -32,3 +32,4 @@ Currently, this is a bit of a mess and is a work in progress.
 
 ### 0.3
 feature/map_loading: This implements the facilities for loading the maps from disk.  WIP
+Right now, maps are built with the tool found here https://forums.atariage.com/topic/330711-new-antic-mode-4-charactersetscreentileset-designtool-for-windows-and-mac/
